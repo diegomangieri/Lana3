@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, Copy, Check, Loader2, QrCode, AlertCircle } from 'lucide-react'
+import { X, Copy, Check, Loader2, QrCode, AlertCircle, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import QRCodeLib from 'qrcode'
@@ -160,7 +160,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
             <QrCode className="w-5 h-5" />
-            <span className="font-semibold">Pagamento via Pix</span>
+            <span className="font-semibold">Assinatura mensal via Pix</span>
           </div>
           <button 
             onClick={onClose}
@@ -176,7 +176,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="text-center mb-2">
                 <p className="text-2xl font-bold text-foreground">R$ {amount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Assinatura VIP</p>
+                <p className="text-sm text-muted-foreground">Conteudos VIP (Lana Alvarenga)</p>
               </div>
 
               <div className="flex flex-col gap-1">
@@ -233,8 +233,8 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
               <Button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
+                disabled={loading || !formData.name || !formData.email || formData.cpf.length < 14}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -246,8 +246,9 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 )}
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
-                Pagamento 100% seguro via Pix
+              <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+                <Lock className="w-3 h-3" />
+                Pagamento 100% seguro
               </p>
             </form>
           )}
