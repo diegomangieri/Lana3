@@ -160,7 +160,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
             <QrCode className="w-5 h-5" />
-            <span className="font-semibold">Assinatura mensal via Pix</span>
+            <span className="font-semibold">Assinatura via Pix</span>
           </div>
           <button 
             onClick={onClose}
@@ -176,7 +176,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="text-center mb-2">
                 <p className="text-2xl font-bold text-foreground">R$ {amount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Conteudos VIP (Lana Alvarenga)</p>
+                <p className="text-sm text-muted-foreground">Conteúdos VIP (Lana Alvarenga)</p>
               </div>
 
               <div className="flex flex-col gap-1">
