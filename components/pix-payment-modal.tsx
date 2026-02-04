@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, Copy, Check, Loader2, QrCode, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import QRCodeLib from 'qrcode'
 
 interface PixPaymentModalProps {
   isOpen: boolean
@@ -23,8 +24,8 @@ interface FormData {
 export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
   const [formData, setFormData] = useState<FormData>({ name: '', email: '', cpf: '' })
-  const [qrCode, setQrCode] = useState<string>('')
   const [qrCodeText, setQrCodeText] = useState<string>('')
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
   const [transactionId, setTransactionId] = useState<string>('')
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -55,7 +56,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         throw new Error(data.error || 'Erro ao criar cobrança')
       }
 
-      setQrCode(data.qrCode)
       setQrCodeText(data.qrCodeText)
       setTransactionId(data.transactionId)
       setStep('qrcode')
@@ -97,6 +97,20 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
     }
   }, [transactionId, checkingPayment, onSuccess])
 
+  // Gerar QR Code quando tiver o texto
+  useEffect(() => {
+    if (step === 'qrcode' && qrCodeText && qrCanvasRef.current) {
+      QRCodeLib.toCanvas(qrCanvasRef.current, qrCodeText, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      })
+    }
+  }, [step, qrCodeText])
+
   // Polling para verificar pagamento
   useEffect(() => {
     if (step !== 'qrcode' || !transactionId) return
@@ -110,7 +124,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
     if (!isOpen) {
       setStep('form')
       setFormData({ name: '', email: '', cpf: '' })
-      setQrCode('')
       setQrCodeText('')
       setTransactionId('')
       setError('')
@@ -236,17 +249,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
               {/* QR Code */}
               <div className="bg-white p-4 rounded-xl border-2 border-zinc-200">
-                {qrCode ? (
-                  <img 
-                    src={qrCode} 
-                    alt="QR Code Pix" 
-                    className="w-48 h-48"
-                  />
-                ) : (
-                  <div className="w-48 h-48 bg-zinc-100 rounded-lg flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
-                  </div>
-                )}
+                <canvas 
+                  ref={qrCanvasRef}
+                  className="w-48 h-48"
+                />
               </div>
 
               {/* Código Pix */}
