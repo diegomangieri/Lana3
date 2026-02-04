@@ -3,18 +3,16 @@ import { NextRequest, NextResponse } from 'next/server'
 const SYNCPAY_BASE_URL = 'https://api.syncpayments.com.br'
 
 interface TokenResponse {
-  token: string
-  expires_in?: number
+  access_token: string
+  token_type: string
+  expires_in: number
+  expires_at: string
 }
 
 interface PixResponse {
-  id: string
-  status: string
-  qrcode: string
-  qrcode_text: string
-  pix_key?: string
-  amount: number
-  external_id: string
+  message: string
+  pix_code: string
+  identifier: string
 }
 
 async function getAccessToken(): Promise<string> {
@@ -29,7 +27,7 @@ async function getAccessToken(): Promise<string> {
 
   console.log('[v0] Attempting auth with SyncPay...')
   
-  const response = await fetch(`${SYNCPAY_BASE_URL}/auth/token`, {
+  const response = await fetch(`${SYNCPAY_BASE_URL}/api/partner/v1/auth-token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -50,7 +48,7 @@ async function getAccessToken(): Promise<string> {
 
   const data: TokenResponse = await response.json()
   console.log('[v0] SyncPay auth successful, token received')
-  return data.token
+  return data.access_token
 }
 
 export async function POST(request: NextRequest) {
@@ -73,21 +71,20 @@ export async function POST(request: NextRequest) {
     
     console.log('[v0] Creating PIX charge for:', { name, email, amount, externalId })
     
-    const pixResponse = await fetch(`${SYNCPAY_BASE_URL}/transaction/pix/cashin`, {
+    const pixResponse = await fetch(`${SYNCPAY_BASE_URL}/api/partner/v1/cash-in`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         amount: amount,
-        external_id: externalId,
-        payer: {
+        description: 'Assinatura VIP - Lana Alvarenga',
+        client: {
           name: name,
           email: email,
         },
-        description: 'Assinatura VIP - Lana Alvarenga',
-        expiration_minutes: 30,
       }),
     })
 
@@ -103,14 +100,14 @@ export async function POST(request: NextRequest) {
     }
 
     const pixData: PixResponse = await pixResponse.json()
-    console.log('[v0] PIX charge created successfully:', { id: pixData.id, status: pixData.status })
+    console.log('[v0] PIX charge created successfully:', { identifier: pixData.identifier, message: pixData.message })
 
     return NextResponse.json({
       success: true,
-      transactionId: pixData.id,
+      transactionId: pixData.identifier,
       externalId: externalId,
-      qrCode: pixData.qrcode,
-      qrCodeText: pixData.qrcode_text,
+      qrCode: pixData.pix_code,
+      qrCodeText: pixData.pix_code,
       amount: amount,
     })
 
