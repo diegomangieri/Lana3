@@ -81,11 +81,16 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
   const checkPaymentStatus = useCallback(async () => {
     if (!transactionId || checkingPayment) return
 
+    console.log('[v0] Checking payment status for:', transactionId)
+
     try {
       const response = await fetch(`/api/pix/status?transactionId=${transactionId}`)
       const data = await response.json()
 
+      console.log('[v0] Payment status response:', data)
+
       if (data.isPaid) {
+        console.log('[v0] Payment confirmed! Updating UI...')
         setStep('checking')
         setCheckingPayment(true)
         setTimeout(() => {
