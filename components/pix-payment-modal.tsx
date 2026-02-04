@@ -13,7 +13,7 @@ interface PixPaymentModalProps {
   amount?: number
 }
 
-type Step = 'form' | 'qrcode' | 'checking'
+type Step = 'form' | 'qrcode' | 'checking' | 'success'
 
 interface FormData {
   name: string
@@ -89,6 +89,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         setStep('checking')
         setCheckingPayment(true)
         setTimeout(() => {
+          setStep('success')
           onSuccess()
         }, 1500)
       }
@@ -316,7 +317,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
               </div>
 
               <p className="text-xs text-center text-muted-foreground">
-                O QR Code expira em 30 minutos
+                O QR Code expira em 30 minutos!
               </p>
             </div>
           )}
@@ -329,9 +330,28 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold text-foreground">Pagamento confirmado!</p>
-                <p className="text-sm text-muted-foreground">Redirecionando...</p>
+                <p className="text-sm text-muted-foreground">Processando...</p>
               </div>
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          )}
+
+          {/* Etapa 4: Sucesso */}
+          {step === 'success' && (
+            <div className="flex flex-col items-center gap-6 py-8">
+              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
+                <Check className="w-10 h-10 text-emerald-500" />
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-foreground">Pagamento confirmado!</p>
+                <p className="text-sm text-muted-foreground mt-2">Sua assinatura foi ativada com sucesso.</p>
+              </div>
+              <Button 
+                onClick={() => window.open('https://google.com', '_blank')}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
+              >
+                Acesse o conteudo!
+              </Button>
             </div>
           )}
         </div>

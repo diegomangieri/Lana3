@@ -1,22 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const SYNCPAY_BASE_URL = 'https://api.syncpayments.com.br'
-const CLIENT_ID = process.env.SYNCPAY_CLIENT_ID!
-const CLIENT_SECRET = process.env.SYNCPAY_CLIENT_SECRET!
 
 interface TokenResponse {
-  token: string
+  access_token: string
+  token_type: string
+  expires_in: number
+  expires_at: string
 }
 
 interface TransactionStatus {
-  id: string
+  identifier: string
   status: string
   amount: number
   paid_at?: string
 }
 
 async function getAccessToken(): Promise<string> {
-  const response = await fetch(`${SYNCPAY_BASE_URL}/auth/token`, {
+  const CLIENT_ID = process.env.SYNCPAY_CLIENT_ID
+  const CLIENT_SECRET = process.env.SYNCPAY_CLIENT_SECRET
+
+  if (!CLIENT_ID || !CLIENT_SECRET) {
+    throw new Error('Credenciais SyncPay nao configuradas')
+  }
+
+  const response = await fetch(`${SYNCPAY_BASE_URL}/api/partner/v1/auth-token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -28,11 +36,11 @@ async function getAccessToken(): Promise<string> {
   })
 
   if (!response.ok) {
-    throw new Error('Falha na autenticação com SyncPay')
+    throw new Error('Falha na autenticacao com SyncPay')
   }
 
   const data: TokenResponse = await response.json()
-  return data.token
+  return data.access_token
 }
 
 export async function GET(request: NextRequest) {
@@ -50,10 +58,11 @@ export async function GET(request: NextRequest) {
     const accessToken = await getAccessToken()
 
     const statusResponse = await fetch(
-      `${SYNCPAY_BASE_URL}/transaction/${transactionId}`,
+      `${SYNCPAY_BASE_URL}/api/partner/v1/transaction/${transactionId}`,
       {
         method: 'GET',
         headers: {
+          'Accept': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
       }
@@ -70,12 +79,12 @@ export async function GET(request: NextRequest) {
 
     const statusData: TransactionStatus = await statusResponse.json()
 
-    // Status possíveis: pending, paid, expired, cancelled
-    const isPaid = statusData.status === 'paid' || statusData.status === 'approved'
+    // Status possiveis: pending, paid, expired, cancelled
+    const isPaid = statusData.status === 'paid' || statusData.status === 'approved' || statusData.status === 'completed'
 
     return NextResponse.json({
       success: true,
-      transactionId: statusData.id,
+      transactionId: statusData.identifier,
       status: statusData.status,
       isPaid: isPaid,
       paidAt: statusData.paid_at,
