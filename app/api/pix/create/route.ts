@@ -54,11 +54,11 @@ async function getAccessToken(): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, amount = 19.90 } = body
+    const { name, email, cpf, amount = 19.90 } = body
 
-    if (!name || !email) {
+    if (!name || !email || !cpf) {
       return NextResponse.json(
-        { error: 'Nome e email são obrigatórios' },
+        { error: 'Nome, email e CPF são obrigatórios' },
         { status: 400 }
       )
     }
@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
         description: 'Assinatura VIP - Lana Alvarenga',
         client: {
           name: name,
+          cpf: cpf,
           email: email,
         },
       }),
