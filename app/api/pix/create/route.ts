@@ -44,21 +44,11 @@ async function getAccessToken(): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, cpf, amount = 19.90 } = body
+    const { name, email, amount = 19.90 } = body
 
-    if (!name || !email || !cpf) {
+    if (!name || !email) {
       return NextResponse.json(
-        { error: 'Nome, email e CPF são obrigatórios' },
-        { status: 400 }
-      )
-    }
-
-    // Remove formatação do CPF
-    const cleanCpf = cpf.replace(/\D/g, '')
-
-    if (cleanCpf.length !== 11) {
-      return NextResponse.json(
-        { error: 'CPF inválido' },
+        { error: 'Nome e email são obrigatórios' },
         { status: 400 }
       )
     }
@@ -81,7 +71,6 @@ export async function POST(request: NextRequest) {
         payer: {
           name: name,
           email: email,
-          cpf: cleanCpf,
         },
         description: 'Assinatura VIP - Lana Alvarenga',
         expiration_minutes: 30,

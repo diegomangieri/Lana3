@@ -17,12 +17,11 @@ type Step = 'form' | 'qrcode' | 'checking'
 interface FormData {
   name: string
   email: string
-  cpf: string
 }
 
 export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
-  const [formData, setFormData] = useState<FormData>({ name: '', email: '', cpf: '' })
+  const [formData, setFormData] = useState<FormData>({ name: '', email: '' })
   const [qrCode, setQrCode] = useState<string>('')
   const [qrCodeText, setQrCodeText] = useState<string>('')
   const [transactionId, setTransactionId] = useState<string>('')
@@ -30,15 +29,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
   const [checkingPayment, setCheckingPayment] = useState(false)
-
-  // Formatar CPF
-  const formatCpf = (value: string) => {
-    const numbers = value.replace(/\D/g, '').slice(0, 11)
-    return numbers
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-  }
 
   // Criar cobrança Pix
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +43,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          cpf: formData.cpf.replace(/\D/g, ''),
           amount: amount,
         }),
       })
@@ -118,7 +107,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
   useEffect(() => {
     if (!isOpen) {
       setStep('form')
-      setFormData({ name: '', email: '', cpf: '' })
+      setFormData({ name: '', email: '' })
       setQrCode('')
       setQrCodeText('')
       setTransactionId('')
@@ -183,19 +172,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg border border-zinc-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   placeholder="seu@email.com"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-foreground">CPF</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.cpf}
-                  onChange={(e) => setFormData({ ...formData, cpf: formatCpf(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-lg border border-zinc-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  placeholder="000.000.000-00"
-                  maxLength={14}
                 />
               </div>
 
