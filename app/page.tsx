@@ -2,18 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Heart, MessageCircle, ChevronDown, Lock, Check, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { PixPaymentModal } from "@/components/pix-payment-modal"
 
 
 export default function VIPSubscriptionPage() {
+  const router = useRouter()
   const [showVIP, setShowVIP] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [pageReady, setPageReady] = useState(false)
   const [vipContentVisible, setVipContentVisible] = useState(false)
+  const [showPixModal, setShowPixModal] = useState(false)
 
   // Fade in everything on mount
   useEffect(() => {
@@ -52,11 +56,9 @@ export default function VIPSubscriptionPage() {
     }
   ]
 
-  const checkoutLinks = {
-    '15': 'https://www.ggcheckout.com/checkout/v4/8eFLPkMQrBtTsgvLFrqY',
-    '30': 'https://www.ggcheckout.com/checkout/v4/8eFLPkMQrBtTsgvLFrqY',
-    '90': 'https://www.ggcheckout.com/checkout/v4/8eFLPkMQrBtTsgvLFrqY',
-    '180': 'https://www.ggcheckout.com/checkout/v4/8eFLPkMQrBtTsgvLFrqY',
+  const handlePaymentSuccess = () => {
+    setShowPixModal(false)
+    router.push('/sucesso')
   }
 
   const tomorrow = new Date()
@@ -77,6 +79,14 @@ export default function VIPSubscriptionPage() {
 
   return (
     <>
+      {/* Pix Payment Modal */}
+      <PixPaymentModal
+        isOpen={showPixModal}
+        onClose={() => setShowPixModal(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={19.90}
+      />
+
       {/* Transition Overlay */}
       <div 
         className={`fixed inset-0 bg-white z-50 flex items-center justify-center transition-opacity duration-500 ${isTransitioning ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
@@ -258,7 +268,7 @@ export default function VIPSubscriptionPage() {
             <Button 
               size="lg" 
               className="w-full bg-emerald-500 text-white hover:bg-emerald-600 font-bold text-base h-12 active:scale-95 transition-transform duration-150 shadow-lg hover:shadow-xl"
-              onClick={() => window.location.href = checkoutLinks['15']}
+              onClick={() => setShowPixModal(true)}
             >
               Assinar agora!
             </Button>
