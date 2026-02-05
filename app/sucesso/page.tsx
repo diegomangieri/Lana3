@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Check, Mail, ArrowRight, PartyPopper } from 'lucide-react'
+import { Check, ArrowRight, PartyPopper } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 
@@ -50,28 +50,16 @@ export default function SuccessPage() {
 
           {/* Instructions */}
           <div className="flex flex-col gap-4">
-            <h2 className="font-bold text-foreground text-lg">Proximos passos:</h2>
+            <h2 className="font-bold text-foreground text-lg">Próximo passo:</h2>
             
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Mail className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">Verifique seu e-mail</p>
-                <p className="text-sm text-muted-foreground">
-                  Enviamos o link de acesso exclusivo para o e-mail cadastrado. Confira também a caixa de spam.
-                </p>
-              </div>
-            </div>
-
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <ArrowRight className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Acesse o conteudo VIP</p>
+                <p className="font-semibold text-foreground">Acesse o conteúdo VIP</p>
                 <p className="text-sm text-muted-foreground">
-                  Clique no link do e-mail para acessar todos os conteudos exclusivos imediatamente.
+                  Clique no botão abaixo para acessar todos os conteúdos exclusivos imediatamente.
                 </p>
               </div>
             </div>
@@ -81,32 +69,24 @@ export default function SuccessPage() {
           <div className="flex flex-col gap-3">
             <Button 
               className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 rounded-xl"
-              onClick={() => window.open('mailto:', '_blank')}
+              onClick={() => window.open('https://drive.google.com/drive/folders/16w6ysCLaJwEUWouom85VmWcv86vK8OjU', '_blank')}
             >
-              <Mail className="w-4 h-4 mr-2" />
-              Abrir meu e-mail
-            </Button>
-
-            <Button 
-              variant="outline"
-              className="w-full font-semibold py-6 rounded-xl"
-              onClick={() => window.location.href = '/'}
-            >
-              Voltar para o inicio
+              <ArrowRight className="w-4 h-4 mr-2" />
+              Acessar os conteúdos!
             </Button>
           </div>
 
           {/* Support */}
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              Problemas com o acesso? Entre em contato pelo Instagram{' '}
+              Problemas com o acesso? Entre em contato pelo WhatsApp{' '}
               <a 
-                href="https://instagram.com/lana.alvarenga" 
+                href="https://wa.me/5511960233821" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-primary font-semibold hover:underline"
               >
-                @lana.alvarenga
+                +55 (11) 96023-3821
               </a>
             </p>
           </div>
