@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { X, Copy, Check, Loader2, QrCode, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { X, Copy, Check, Loader2, QrCode, AlertCircle, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import QRCodeLib from 'qrcode'
 
 interface PixPaymentModalProps {
   isOpen: boolean
@@ -12,7 +13,7 @@ interface PixPaymentModalProps {
   amount?: number
 }
 
-type Step = 'form' | 'qrcode' | 'checking'
+type Step = 'form' | 'qrcode' | 'checking' | 'success'
 
 interface FormData {
   name: string
@@ -22,8 +23,8 @@ interface FormData {
 export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
   const [formData, setFormData] = useState<FormData>({ name: '', email: '' })
-  const [qrCode, setQrCode] = useState<string>('')
   const [qrCodeText, setQrCodeText] = useState<string>('')
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
   const [transactionId, setTransactionId] = useState<string>('')
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -43,6 +44,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
+          cpf: '52998224725',
           amount: amount,
         }),
       })
@@ -53,7 +55,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         throw new Error(data.error || 'Erro ao criar cobrança')
       }
 
-      setQrCode(data.qrCode)
       setQrCodeText(data.qrCodeText)
       setTransactionId(data.transactionId)
       setStep('qrcode')
@@ -87,13 +88,28 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         setStep('checking')
         setCheckingPayment(true)
         setTimeout(() => {
+          setStep('success')
           onSuccess()
         }, 1500)
       }
-    } catch (err) {
-      console.error('[v0] Error checking payment:', err)
+    } catch {
+      // Silently fail and retry on next poll
     }
   }, [transactionId, checkingPayment, onSuccess])
+
+  // Gerar QR Code quando tiver o texto
+  useEffect(() => {
+    if (step === 'qrcode' && qrCodeText && qrCanvasRef.current) {
+      QRCodeLib.toCanvas(qrCanvasRef.current, qrCodeText, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff',
+        },
+      })
+    }
+  }, [step, qrCodeText])
 
   // Polling para verificar pagamento
   useEffect(() => {
@@ -103,12 +119,24 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
     return () => clearInterval(interval)
   }, [step, transactionId, checkPaymentStatus])
 
+  // Bloquear scroll quando modal está aberto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   // Reset ao fechar
   useEffect(() => {
     if (!isOpen) {
       setStep('form')
       setFormData({ name: '', email: '' })
-      setQrCode('')
       setQrCodeText('')
       setTransactionId('')
       setError('')
@@ -132,7 +160,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
             <QrCode className="w-5 h-5" />
-            <span className="font-semibold">Pagamento via Pix</span>
+            <span className="font-semibold">Assinatura via Pix</span>
           </div>
           <button 
             onClick={onClose}
@@ -148,7 +176,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="text-center mb-2">
                 <p className="text-2xl font-bold text-foreground">R$ {amount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Assinatura VIP</p>
+                <p className="text-sm text-muted-foreground">Conteúdos VIP (Lana Alvarenga)</p>
               </div>
 
               <div className="flex flex-col gap-1">
@@ -184,8 +212,8 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
               <Button 
                 type="submit" 
-                disabled={loading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
+                disabled={loading || !formData.name || !formData.email.includes('@')}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -197,8 +225,9 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 )}
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground">
-                Pagamento 100% seguro via Pix
+              <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+                <Lock className="w-3 h-3" />
+                Pagamento 100% seguro
               </p>
             </form>
           )}
@@ -213,17 +242,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
               {/* QR Code */}
               <div className="bg-white p-4 rounded-xl border-2 border-zinc-200">
-                {qrCode ? (
-                  <img 
-                    src={qrCode} 
-                    alt="QR Code Pix" 
-                    className="w-48 h-48"
-                  />
-                ) : (
-                  <div className="w-48 h-48 bg-zinc-100 rounded-lg flex items-center justify-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
-                  </div>
-                )}
+                <canvas 
+                  ref={qrCanvasRef}
+                  className="w-48 h-48"
+                />
               </div>
 
               {/* Código Pix */}
@@ -273,7 +295,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
               </div>
 
               <p className="text-xs text-center text-muted-foreground">
-                O QR Code expira em 30 minutos
+                O QR Code expira em 10 minutos!
               </p>
             </div>
           )}
@@ -286,9 +308,28 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold text-foreground">Pagamento confirmado!</p>
-                <p className="text-sm text-muted-foreground">Redirecionando...</p>
+                <p className="text-sm text-muted-foreground">Processando...</p>
               </div>
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          )}
+
+          {/* Etapa 4: Sucesso */}
+          {step === 'success' && (
+            <div className="flex flex-col items-center gap-6 py-8">
+              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
+                <Check className="w-10 h-10 text-emerald-500" />
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-foreground">Pagamento confirmado!</p>
+                <p className="text-sm text-muted-foreground mt-2">Sua assinatura foi ativada com sucesso.</p>
+              </div>
+              <Button 
+                onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
+              >
+                Acesse o conteúdo!
+              </Button>
             </div>
           )}
         </div>

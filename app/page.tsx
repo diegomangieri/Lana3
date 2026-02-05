@@ -47,7 +47,7 @@ export default function VIPSubscriptionPage() {
       answer: "Sim, você pode cancelar a qualquer momento. A assinatura não renova automaticamente, você tem total controle."
     },
     {
-      question: "Possuí reembolso ou garantia?",
+      question: "Possui reembolso ou garantia?",
       answer: "Temos garantia de 7 dias. Se não ficar satisfeito, devolvemos 100% do seu dinheiro."
     },
     {
