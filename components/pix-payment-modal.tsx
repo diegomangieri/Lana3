@@ -18,12 +18,11 @@ type Step = 'form' | 'qrcode' | 'checking' | 'success'
 interface FormData {
   name: string
   email: string
-  cpf: string
 }
 
 export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
-  const [formData, setFormData] = useState<FormData>({ name: '', email: '', cpf: '' })
+  const [formData, setFormData] = useState<FormData>({ name: '', email: '' })
   const [qrCodeText, setQrCodeText] = useState<string>('')
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)
   const [transactionId, setTransactionId] = useState<string>('')
@@ -45,7 +44,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          cpf: formData.cpf.replace(/\D/g, ''),
+          cpf: '52998224725',
           amount: amount,
         }),
       })
@@ -137,7 +136,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
   useEffect(() => {
     if (!isOpen) {
       setStep('form')
-      setFormData({ name: '', email: '', cpf: '' })
+      setFormData({ name: '', email: '' })
       setQrCodeText('')
       setTransactionId('')
       setError('')
@@ -204,27 +203,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-foreground">CPF</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.cpf}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '')
-                    const formatted = value
-                      .replace(/(\d{3})(\d)/, '$1.$2')
-                      .replace(/(\d{3})(\d)/, '$1.$2')
-                      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-                      .replace(/(-\d{2})\d+?$/, '$1')
-                    setFormData({ ...formData, cpf: formatted })
-                  }}
-                  maxLength={14}
-                  className="w-full px-4 py-3 rounded-lg border border-zinc-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  placeholder="000.000.000-00"
-                />
-              </div>
-
               {error && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
                   <AlertCircle className="w-4 h-4" />
@@ -234,7 +212,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
               <Button 
                 type="submit" 
-                disabled={loading || !formData.name || !formData.email || formData.cpf.length < 14}
+                disabled={loading || !formData.name || !formData.email.includes('@')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
