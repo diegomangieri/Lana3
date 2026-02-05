@@ -347,10 +347,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 <p className="text-sm text-muted-foreground mt-2">Sua assinatura foi ativada com sucesso.</p>
               </div>
               <Button 
-                onClick={() => window.open('https://google.com', '_blank')}
+                onClick={() => window.open('https://drive.google.com/drive/folders/16w6ysCLaJwEUWouom85VmWcv86vK8OjU', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                Acesse o conteudo!
+                Acesse o conteúdo!
               </Button>
             </div>
           )}
