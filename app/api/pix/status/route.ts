@@ -55,11 +55,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('[v0] Checking status for transactionId:', transactionId)
-    
     const accessToken = await getAccessToken()
-
-    console.log('[v0] Got access token, fetching transaction status...')
 
     const statusResponse = await fetch(
       `${SYNCPAY_BASE_URL}/api/partner/v1/transaction/${transactionId}`,
@@ -72,30 +68,28 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    console.log('[v0] Status response code:', statusResponse.status)
-    
     if (!statusResponse.ok) {
       const error = await statusResponse.text()
-      console.error('[v0] SyncPay status error:', statusResponse.status, error)
       return NextResponse.json(
         { error: 'Falha ao consultar status' },
         { status: 500 }
       )
     }
 
-    const statusData = await statusResponse.json()
-    console.log('[v0] SyncPay transaction status response:', JSON.stringify(statusData))
+    const responseData = await statusResponse.json()
 
-    // Status possiveis: pending, paid, expired, cancelled
+    // A resposta vem dentro de um objeto "data"
+    const statusData = responseData.data || responseData
+
+    // Status possiveis: pending, completed, expired, cancelled
     const isPaid = statusData.status === 'paid' || statusData.status === 'approved' || statusData.status === 'completed'
-    console.log('[v0] isPaid:', isPaid, 'status:', statusData.status)
 
     return NextResponse.json({
       success: true,
-      transactionId: statusData.identifier,
+      transactionId: statusData.reference_id || statusData.identifier,
       status: statusData.status,
       isPaid: isPaid,
-      paidAt: statusData.paid_at,
+      paidAt: statusData.transaction_date,
     })
 
   } catch (error) {
