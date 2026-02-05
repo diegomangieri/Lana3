@@ -295,7 +295,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
               </div>
 
               <p className="text-xs text-center text-muted-foreground">
-                O QR Code expira em 30 minutos!
+                O QR Code expira em 10 minutos!
               </p>
             </div>
           )}
@@ -325,7 +325,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 <p className="text-sm text-muted-foreground mt-2">Sua assinatura foi ativada com sucesso.</p>
               </div>
               <Button 
-                onClick={() => window.open('https://drive.google.com/drive/folders/16w6ysCLaJwEUWouom85VmWcv86vK8OjU', '_blank')}
+                onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
                 Acesse o conteúdo!

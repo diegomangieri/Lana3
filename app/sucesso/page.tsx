@@ -69,7 +69,7 @@ export default function SuccessPage() {
           <div className="flex flex-col gap-3">
             <Button 
               className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6 rounded-xl"
-              onClick={() => window.open('https://drive.google.com/drive/folders/16w6ysCLaJwEUWouom85VmWcv86vK8OjU', '_blank')}
+              onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
             >
               <ArrowRight className="w-4 h-4 mr-2" />
               Acessar os conteúdos!
