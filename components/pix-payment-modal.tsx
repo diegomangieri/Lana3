@@ -20,7 +20,7 @@ interface FormData {
   email: string
 }
 
-export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: PixPaymentModalProps) {
+export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 29.90 }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
   const [formData, setFormData] = useState<FormData>({ name: '', email: '' })
   const [qrCodeText, setQrCodeText] = useState<string>('')

@@ -54,7 +54,7 @@ async function getAccessToken(): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, cpf, amount = 19.90 } = body
+    const { name, email, cpf, amount = 29.90 } = body
 
     if (!name || !email || !cpf) {
       return NextResponse.json(
