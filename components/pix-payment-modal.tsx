@@ -198,11 +198,11 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 pt-4 pb-5">
           {/* Etapa 1: Formulario */}
           {step === 'form' && (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className={`text-center mb-2 transition-all duration-500 delay-100 ${
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <div className={`text-center mb-1 transition-all duration-500 delay-100 ${
                 isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}>
                 <p className="text-2xl font-bold text-foreground">
@@ -347,7 +347,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
 
           {/* Etapa 2: QR Code */}
           {step === 'qrcode' && (
-            <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center">
                 <p className="text-2xl font-bold text-foreground">{'Quase lá, amor! 🥰'}</p>
                 <p className="text-sm text-muted-foreground">{'Escaneie ou copie o código abaixo.'}</p>
@@ -407,7 +407,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 <span>Aguardando pagamento...</span>
               </div>
 
-              <p className="text-xs text-center text-muted-foreground">
+              <p className="text-xs text-center text-muted-foreground -mt-1">
                 {'Após pagar, volte para o site. O seu acesso será liberado automaticamente.'}
               </p>
             </div>
