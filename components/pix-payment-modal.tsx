@@ -181,11 +181,11 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       />
 
       {/* Modal with scale + fade animation */}
-      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out border-2 border-orange-400 ${
+      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out border-0 ${
         isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
       }`}>
-        {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between">
+        {/* Header - flush to top, no gap */}
+        <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between -mt-px">
           <div className="flex items-center gap-2 text-white">
             <QrCode className="w-5 h-5" />
             <span className="font-semibold">Assinatura via Pix</span>
