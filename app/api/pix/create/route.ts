@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const ROKIFY_BASE_URL = 'https://api.rokify.com.br/functions/v1'
 
@@ -100,9 +101,45 @@ export async function POST(request: NextRequest) {
 
     console.log('[v0] CREATE - Extracted qrCodeText length:', qrCodeText.length, 'starts with:', qrCodeText.substring(0, 40))
 
+    const txId = pixData.id || pixData.identifier
+
+    // Salvar no Supabase com status pending na hora da criacao
+    try {
+      const supabase = createAdminClient()
+      const { data: existing } = await supabase
+        .from('subscribers')
+        .select('id')
+        .eq('email', email.toLowerCase().trim())
+        .single()
+
+      if (existing) {
+        await supabase
+          .from('subscribers')
+          .update({
+            name: name || null,
+            transaction_id: txId,
+            amount: amount || 0,
+            status: 'pending',
+          })
+          .eq('email', email.toLowerCase().trim())
+      } else {
+        await supabase
+          .from('subscribers')
+          .insert({
+            email: email.toLowerCase().trim(),
+            name: name || null,
+            transaction_id: txId,
+            amount: amount || 0,
+            status: 'pending',
+          })
+      }
+    } catch (dbErr) {
+      console.error('[v0] CREATE - Error saving pending subscriber:', dbErr)
+    }
+
     return NextResponse.json({
       success: true,
-      transactionId: pixData.id || pixData.identifier,
+      transactionId: txId,
       externalId: externalId,
       qrCode: qrCodeText,
       qrCodeText: qrCodeText,

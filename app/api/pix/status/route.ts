@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const ROKIFY_BASE_URL = 'https://api.rokify.com.br/functions/v1'
 
@@ -65,6 +66,22 @@ export async function GET(request: NextRequest) {
 
     // Rokify usa "paid" quando o pix foi confirmado, "waiting_payment" quando pendente
     const isPaid = statusData.status === 'paid' || statusData.status === 'approved' || statusData.status === 'completed'
+
+    // Se pagou, atualizar status no Supabase
+    if (isPaid) {
+      try {
+        const supabase = createAdminClient()
+        await supabase
+          .from('subscribers')
+          .update({
+            status: 'paid',
+            paid_at: new Date().toISOString(),
+          })
+          .eq('transaction_id', transactionId)
+      } catch (dbErr) {
+        console.error('[v0] STATUS - Error updating subscriber to paid:', dbErr)
+      }
+    }
 
     return NextResponse.json({
       success: true,
