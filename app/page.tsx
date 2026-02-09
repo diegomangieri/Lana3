@@ -190,7 +190,7 @@ export default function VIPSubscriptionPage() {
                   <span className="text-muted-foreground ml-1">Vídeos</span>
                 </div>
                 <div className="text-center">
-                  <span className="font-bold text-foreground">5.4K</span>
+                  <span className="font-bold text-foreground">6.1K</span>
                   <span className="text-muted-foreground ml-1">Likes</span>
                 </div>
               </div>
@@ -234,11 +234,11 @@ export default function VIPSubscriptionPage() {
             <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-4">
               <div className="flex items-center gap-2 text-white">
                 <Heart className="w-5 h-5" />
-                <span className="font-semibold text-sm">1.7K</span>
+                <span className="font-semibold text-sm">1.9K</span>
               </div>
               <div className="flex items-center gap-2 text-white">
                 <MessageCircle className="w-5 h-5" />
-                <span className="font-semibold text-sm">312</span>
+                <span className="font-semibold text-sm">331</span>
               </div>
             </div>
           </div>
