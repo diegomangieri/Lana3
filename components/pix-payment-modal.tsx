@@ -74,7 +74,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar cobranca')
+        throw new Error(data.error || 'Erro ao criar cobran\u00e7a')
       }
 
       setQrCodeText(data.qrCodeText)
@@ -94,7 +94,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      setError('Erro ao copiar codigo')
+      setError('Erro ao copiar c\u00f3digo')
     }
   }
 
@@ -209,7 +209,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                   R$ {totalAmount.toFixed(2).replace('.', ',')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {'Conteudos VIP (Lana Alvarenga)'}
+                  {'Conte\u00fados VIP (Lana Alvarenga)'}
                   {orderBumpSelected && ' + Grupo WhatsApp'}
                 </p>
               </div>
@@ -253,7 +253,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 }`}>
                   {/* Order bump header */}
                   <div className="p-4 pb-3">
-                    <p className="font-bold text-emerald-700 text-sm mb-3">
+                    <p className="font-bold text-foreground text-sm mb-3">
                       Grupo Exclusivo de WhatsApp
                     </p>
                     <div className="flex items-start gap-3">
@@ -268,12 +268,12 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                         />
                       </div>
                       <p className="text-xs text-zinc-600 leading-relaxed">
-                        {'Exclusividade total que nao faz parte do conteudo padrao. Mais proximidade, sorteios e contato direto comigo! \ud83d\ude0c'}
+                        {'Exclusividade total que n\u00e3o faz parte do conte\u00fado padr\u00e3o. Mais proximidade, sorteios e contato direto comigo! \ud83d\ude0c'}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2 mt-3">
-                      <span className="text-base font-bold text-zinc-900">R$ 9,90</span>
+                      <span className="text-base font-bold text-emerald-500">R$ 9,90</span>
                       <span className="text-xs text-zinc-400 line-through">R$ 49,90</span>
                       <span className="text-[10px] font-bold text-white bg-emerald-500 px-2 py-0.5 rounded-full ml-auto">
                         80%
@@ -299,7 +299,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                           {orderBumpSelected && <Check className="w-3 h-3 text-white" />}
                         </div>
                       </div>
-                      <span className="text-sm font-medium text-zinc-700">
+                      <span className="text-sm font-medium text-foreground">
                         Quero comprar junto!
                       </span>
                     </label>
@@ -347,7 +347,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
             <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center">
                 <p className="text-2xl font-bold text-foreground">R$ {finalAmount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o codigo</p>
+                <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o c\u00f3digo</p>
               </div>
 
               {/* QR Code */}
@@ -394,7 +394,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 ) : (
                   <>
                     <Copy className="w-4 h-4 mr-2" />
-                    {'Copiar codigo Pix'}
+                    {'Copiar c\u00f3digo Pix'}
                   </>
                 )}
               </Button>
@@ -438,7 +438,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                {'Acesse o conteudo!'}
+                {'Acesse o conte\u00fado!'}
               </Button>
             </div>
           )}

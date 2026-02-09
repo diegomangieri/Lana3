@@ -7,7 +7,7 @@ function getRokifyAuthHeader(): string {
   const companyId = process.env.ROKIFY_COMPANY_ID
 
   if (!secretKey || !companyId) {
-    throw new Error('Credenciais Rokify nao configuradas')
+    throw new Error('Credenciais Rokify n\u00e3o configuradas')
   }
 
   const credentials = Buffer.from(`${secretKey}:${companyId}`).toString('base64')
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     if (!transactionId) {
       return NextResponse.json(
-        { error: 'ID da transacao e obrigatorio' },
+        { error: 'ID da transa\u00e7\u00e3o \u00e9 obrigat\u00f3rio' },
         { status: 400 }
       )
     }

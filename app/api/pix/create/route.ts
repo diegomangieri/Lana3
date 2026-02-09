@@ -7,7 +7,7 @@ function getRokifyAuthHeader(): string {
   const companyId = process.env.ROKIFY_COMPANY_ID
 
   if (!secretKey || !companyId) {
-    throw new Error('Credenciais Rokify nao configuradas. Configure ROKIFY_SECRET_KEY e ROKIFY_COMPANY_ID.')
+    throw new Error('Credenciais Rokify n\u00e3o configuradas. Configure ROKIFY_SECRET_KEY e ROKIFY_COMPANY_ID.')
   }
 
   const credentials = Buffer.from(`${secretKey}:${companyId}`).toString('base64')
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     if (!name || !email) {
       return NextResponse.json(
-        { error: 'Nome e email sao obrigatorios' },
+        { error: 'Nome e email s\u00e3o obrigat\u00f3rios' },
         { status: 400 }
       )
     }
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     if (!pixResponse.ok || pixData.status === 'refused') {
       console.error('[v0] Rokify pix error:', pixResponse.status, JSON.stringify(pixData))
       return NextResponse.json(
-        { error: `Falha ao criar cobranca Pix: ${pixResponse.status}` },
+        { error: `Falha ao criar cobran\u00e7a Pix: ${pixResponse.status}` },
         { status: 500 }
       )
     }
