@@ -330,17 +330,20 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                   </>
                 ) : (
                   <>
-                    Pagar R$ {totalAmount.toFixed(2).replace('.', ',')} via Pix
+                    Gerar Pix (R$ {totalAmount.toFixed(2).replace('.', ',')})
                   </>
                 )}
               </Button>
 
-              <p className={`text-xs text-center text-muted-foreground flex items-center justify-center gap-1 transition-all duration-500 delay-[400ms] ${
+              <div className={`text-xs text-center text-muted-foreground flex flex-col items-center gap-0.5 transition-all duration-500 delay-[400ms] ${
                 isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}>
-                <Lock className="w-3 h-3" />
-                Pagamento 100% seguro
-              </p>
+                <span className="flex items-center gap-1">
+                  <Lock className="w-3 h-3" />
+                  Pagamento 100% seguro
+                </span>
+                <span>Seus dados est\u00e3o protegidos.</span>
+              </div>
             </form>
           )}
 
