@@ -163,7 +163,7 @@ export default function VIPSubscriptionPage() {
         </div>
 
         {/* Logo Section */}
-        <div className="bg-background py-2 px-4 relative flex items-center justify-center border-b">
+        <div className="bg-background py-2 px-4 flex items-center justify-between border-b">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
               C
@@ -172,7 +172,7 @@ export default function VIPSubscriptionPage() {
           </div>
           <button
             onClick={() => setShowLoginModal(true)}
-            className="absolute right-4 text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
+            className="text-xs font-medium text-zinc-400 hover:text-zinc-600 transition-colors whitespace-nowrap"
           >
             {'J\u00e1 sou assinante'}
           </button>
