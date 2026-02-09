@@ -568,13 +568,13 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-foreground">Pagamento Confirmado!</p>
-                <p className="text-sm text-muted-foreground mt-2">{'Sua assinatura VIP foi ativada.'}</p>
+                <p className="text-sm text-muted-foreground mt-2">Sua assinatura VIP foi ativada.</p>
               </div>
               <Button 
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                {'Acessar conte\u00fado!'}
+                Acessar conte&#250;do!
               </Button>
             </div>
           )}

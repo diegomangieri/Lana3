@@ -139,7 +139,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
                       Verificando...
                     </>
                   ) : (
-                    'Acessar conte\u00fado!'
+                    'Acessar conte\u00FAdo!'
                   )}
                 </Button>
               </div>
@@ -151,7 +151,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold text-foreground">Assinatura verificada!</p>
-                <p className="text-sm text-muted-foreground mt-1">{'Redirecionando para o conte\u00fado...'}</p>
+                <p className="text-sm text-muted-foreground mt-1">Redirecionando para o conte&#250;do...</p>
               </div>
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
