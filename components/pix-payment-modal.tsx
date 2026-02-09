@@ -147,6 +147,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       })
 
       const data = await response.json()
+      console.log('[v0] CLIENT - create response:', JSON.stringify(data).substring(0, 500))
+      console.log('[v0] CLIENT - qrCode:', data.qrCode ? data.qrCode.substring(0, 50) : 'EMPTY')
+      console.log('[v0] CLIENT - qrCodeText:', data.qrCodeText ? data.qrCodeText.substring(0, 50) : 'EMPTY')
+      console.log('[v0] CLIENT - transactionId:', data.transactionId)
 
       if (!response.ok) {
         throw new Error(data.error || 'Erro ao criar cobranca')
@@ -193,8 +197,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
     if (!transactionId || checkingPayment) return
 
     try {
+      console.log('[v0] CLIENT - polling status for:', transactionId)
       const response = await fetch(`/api/pix/status?transactionId=${transactionId}`)
       const data = await response.json()
+      console.log('[v0] CLIENT - status response:', JSON.stringify(data))
 
       if (data.isPaid) {
         setStep('checking')
