@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PixPaymentModal } from "@/components/pix-payment-modal"
+import { SubscriberLoginModal } from "@/components/subscriber-login-modal"
 
 
 export default function VIPSubscriptionPage() {
@@ -18,6 +19,7 @@ export default function VIPSubscriptionPage() {
   const [pageReady, setPageReady] = useState(false)
   const [vipContentVisible, setVipContentVisible] = useState(false)
   const [showPixModal, setShowPixModal] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   // Fade in everything on mount
   useEffect(() => {
@@ -61,6 +63,11 @@ export default function VIPSubscriptionPage() {
     router.push('/sucesso')
   }
 
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false)
+    router.push('/sucesso')
+  }
+
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const promoDate = tomorrow.toLocaleDateString('pt-BR', { 
@@ -79,12 +86,22 @@ export default function VIPSubscriptionPage() {
 
   return (
     <>
+      {/* Preload WhatsApp logo for order bump */}
+      <link rel="preload" href="/images/whatsapp-logo.jpg" as="image" />
+
+      {/* Login Modal */}
+      <SubscriberLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
+      />
+
       {/* Pix Payment Modal */}
       <PixPaymentModal
         isOpen={showPixModal}
         onClose={() => setShowPixModal(false)}
         onSuccess={handlePaymentSuccess}
-        amount={19.90}
+        amount={29.90}
       />
 
       {/* Transition Overlay */}
@@ -99,7 +116,8 @@ export default function VIPSubscriptionPage() {
 
       {/* Landing Page - Always rendered, hidden when VIP is shown */}
       <div 
-        className={`min-h-screen bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center p-4 transition-opacity duration-700 ease-out ${pageReady && !showVIP ? 'opacity-100' : 'opacity-0'} ${showVIP ? 'hidden' : ''}`}
+        className={`min-h-svh bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center p-4 transition-opacity duration-700 ease-out ${pageReady && !showVIP ? 'opacity-100' : 'opacity-0'} ${showVIP ? 'hidden' : ''}`}
+        style={{ minHeight: '100dvh' }}
       >
         <div className="w-full max-w-md">
           {/* Profile Section */}
@@ -146,13 +164,19 @@ export default function VIPSubscriptionPage() {
         </div>
 
         {/* Logo Section */}
-        <div className="bg-background py-2 px-4 flex justify-center border-b">
+        <div className="bg-background py-2 px-4 flex items-center justify-between border-b">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
               C
             </div>
-            <h1 className="text-xl font-bold text-foreground">Conteúdos VIP</h1>
+            <h1 className="text-xl font-bold text-foreground">{'Conte\u00fados VIP'}</h1>
           </div>
+          <button
+            onClick={() => setShowLoginModal(true)}
+            className="text-xs font-medium text-zinc-400 hover:text-zinc-600 transition-colors whitespace-nowrap"
+          >
+            {'J\u00e1 sou assinante'}
+          </button>
         </div>
 
         {/* Profile Header Section */}
@@ -187,7 +211,7 @@ export default function VIPSubscriptionPage() {
                   <span className="text-muted-foreground ml-1">Vídeos</span>
                 </div>
                 <div className="text-center">
-                  <span className="font-bold text-foreground">5.4K</span>
+                  <span className="font-bold text-foreground">6.1K</span>
                   <span className="text-muted-foreground ml-1">Likes</span>
                 </div>
               </div>
@@ -231,11 +255,11 @@ export default function VIPSubscriptionPage() {
             <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-4">
               <div className="flex items-center gap-2 text-white">
                 <Heart className="w-5 h-5" />
-                <span className="font-semibold text-sm">1.7K</span>
+                <span className="font-semibold text-sm">1.9K</span>
               </div>
               <div className="flex items-center gap-2 text-white">
                 <MessageCircle className="w-5 h-5" />
-                <span className="font-semibold text-sm">312</span>
+                <span className="font-semibold text-sm">331</span>
               </div>
             </div>
           </div>
@@ -262,7 +286,7 @@ export default function VIPSubscriptionPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs text-white/70 line-through">R$ 99,90</p>
-                <p className="text-3xl font-bold">R$ 19,90</p>
+                <p className="text-3xl font-bold">R$ 29,90</p>
               </div>
             </div>
             <Button 
