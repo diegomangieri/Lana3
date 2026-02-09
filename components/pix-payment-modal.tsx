@@ -217,21 +217,19 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
               <div className={`flex flex-col gap-1 transition-all duration-500 delay-150 ${
                 isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}>
-                <label className="text-sm font-medium text-foreground">Nome completo</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-3 rounded-lg border border-zinc-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  placeholder="Seu nome"
+                  placeholder="Seu nome completo"
                 />
               </div>
 
               <div className={`flex flex-col gap-1 transition-all duration-500 delay-200 ${
                 isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}>
-                <label className="text-sm font-medium text-foreground">E-mail</label>
                 <input
                   type="email"
                   required
