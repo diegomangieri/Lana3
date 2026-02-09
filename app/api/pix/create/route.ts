@@ -1,54 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const SYNCPAY_BASE_URL = 'https://api.syncpayments.com.br'
+const ROKIFY_BASE_URL = 'https://api.rokify.com.br/functions/v1'
 
-interface TokenResponse {
-  access_token: string
-  token_type: string
-  expires_in: number
-  expires_at: string
-}
+function getRokifyAuthHeader(): string {
+  const secretKey = process.env.ROKIFY_SECRET_KEY
+  const companyId = process.env.ROKIFY_COMPANY_ID
 
-interface PixResponse {
-  message: string
-  pix_code: string
-  identifier: string
-}
-
-async function getAccessToken(): Promise<string> {
-  const CLIENT_ID = process.env.SYNCPAY_CLIENT_ID
-  const CLIENT_SECRET = process.env.SYNCPAY_CLIENT_SECRET
-
-  console.log('[v0] Checking credentials - CLIENT_ID exists:', !!CLIENT_ID, '- CLIENT_SECRET exists:', !!CLIENT_SECRET)
-
-  if (!CLIENT_ID || !CLIENT_SECRET) {
-    throw new Error('Credenciais SyncPay não configuradas. Configure SYNCPAY_CLIENT_ID e SYNCPAY_CLIENT_SECRET.')
+  if (!secretKey || !companyId) {
+    throw new Error('Credenciais Rokify nao configuradas. Configure ROKIFY_SECRET_KEY e ROKIFY_COMPANY_ID.')
   }
 
-  console.log('[v0] Attempting auth with SyncPay...')
-  
-  const response = await fetch(`${SYNCPAY_BASE_URL}/api/partner/v1/auth-token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-    }),
-  })
-
-  console.log('[v0] SyncPay auth response status:', response.status)
-
-  if (!response.ok) {
-    const error = await response.text()
-    console.error('[v0] SyncPay auth error:', error)
-    throw new Error(`Falha na autenticação com SyncPay: ${response.status}`)
-  }
-
-  const data: TokenResponse = await response.json()
-  console.log('[v0] SyncPay auth successful, token received')
-  return data.access_token
+  const credentials = Buffer.from(`${secretKey}:${companyId}`).toString('base64')
+  return `Basic ${credentials}`
 }
 
 export async function POST(request: NextRequest) {
@@ -58,25 +21,21 @@ export async function POST(request: NextRequest) {
 
     if (!name || !email || !cpf) {
       return NextResponse.json(
-        { error: 'Nome, email e CPF são obrigatórios' },
+        { error: 'Nome, email e CPF sao obrigatorios' },
         { status: 400 }
       )
     }
 
-    // Obter token de acesso
-    const accessToken = await getAccessToken()
+    const authorization = getRokifyAuthHeader()
 
-    // Criar cobrança Pix
     const externalId = `vip_${Date.now()}_${Math.random().toString(36).substring(7)}`
-    
-    console.log('[v0] Creating PIX charge for:', { name, email, amount, externalId })
-    
-    const pixResponse = await fetch(`${SYNCPAY_BASE_URL}/api/partner/v1/cash-in`, {
+
+    const pixResponse = await fetch(`${ROKIFY_BASE_URL}/transactions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': authorization,
       },
       body: JSON.stringify({
         amount: amount,
@@ -89,26 +48,23 @@ export async function POST(request: NextRequest) {
       }),
     })
 
-    console.log('[v0] PIX creation response status:', pixResponse.status)
-
     if (!pixResponse.ok) {
       const error = await pixResponse.text()
-      console.error('[v0] SyncPay pix error:', pixResponse.status, error)
+      console.error('[v0] Rokify pix error:', pixResponse.status, error)
       return NextResponse.json(
-        { error: `Falha ao criar cobrança Pix: ${pixResponse.status}` },
+        { error: `Falha ao criar cobranca Pix: ${pixResponse.status}` },
         { status: 500 }
       )
     }
 
-    const pixData: PixResponse = await pixResponse.json()
-    console.log('[v0] PIX charge created successfully:', { identifier: pixData.identifier, message: pixData.message })
+    const pixData = await pixResponse.json()
 
     return NextResponse.json({
       success: true,
-      transactionId: pixData.identifier,
+      transactionId: pixData.identifier || pixData.id,
       externalId: externalId,
-      qrCode: pixData.pix_code,
-      qrCodeText: pixData.pix_code,
+      qrCode: pixData.pix_code || pixData.qr_code,
+      qrCodeText: pixData.pix_code || pixData.qr_code,
       amount: amount,
     })
 

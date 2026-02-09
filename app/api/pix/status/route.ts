@@ -1,46 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const SYNCPAY_BASE_URL = 'https://api.syncpayments.com.br'
+const ROKIFY_BASE_URL = 'https://api.rokify.com.br/functions/v1'
 
-interface TokenResponse {
-  access_token: string
-  token_type: string
-  expires_in: number
-  expires_at: string
-}
+function getRokifyAuthHeader(): string {
+  const secretKey = process.env.ROKIFY_SECRET_KEY
+  const companyId = process.env.ROKIFY_COMPANY_ID
 
-interface TransactionStatus {
-  identifier: string
-  status: string
-  amount: number
-  paid_at?: string
-}
-
-async function getAccessToken(): Promise<string> {
-  const CLIENT_ID = process.env.SYNCPAY_CLIENT_ID
-  const CLIENT_SECRET = process.env.SYNCPAY_CLIENT_SECRET
-
-  if (!CLIENT_ID || !CLIENT_SECRET) {
-    throw new Error('Credenciais SyncPay nao configuradas')
+  if (!secretKey || !companyId) {
+    throw new Error('Credenciais Rokify nao configuradas')
   }
 
-  const response = await fetch(`${SYNCPAY_BASE_URL}/api/partner/v1/auth-token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error('Falha na autenticacao com SyncPay')
-  }
-
-  const data: TokenResponse = await response.json()
-  return data.access_token
+  const credentials = Buffer.from(`${secretKey}:${companyId}`).toString('base64')
+  return `Basic ${credentials}`
 }
 
 export async function GET(request: NextRequest) {
@@ -50,26 +21,27 @@ export async function GET(request: NextRequest) {
 
     if (!transactionId) {
       return NextResponse.json(
-        { error: 'ID da transação é obrigatório' },
+        { error: 'ID da transacao e obrigatorio' },
         { status: 400 }
       )
     }
 
-    const accessToken = await getAccessToken()
+    const authorization = getRokifyAuthHeader()
 
     const statusResponse = await fetch(
-      `${SYNCPAY_BASE_URL}/api/partner/v1/transaction/${transactionId}`,
+      `${ROKIFY_BASE_URL}/transactions/${transactionId}`,
       {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': authorization,
         },
       }
     )
 
     if (!statusResponse.ok) {
       const error = await statusResponse.text()
+      console.error('[v0] Rokify status error:', statusResponse.status, error)
       return NextResponse.json(
         { error: 'Falha ao consultar status' },
         { status: 500 }
@@ -78,18 +50,17 @@ export async function GET(request: NextRequest) {
 
     const responseData = await statusResponse.json()
 
-    // A resposta vem dentro de um objeto "data"
     const statusData = responseData.data || responseData
 
-    // Status possiveis: pending, completed, expired, cancelled
+    // Status possiveis: pending, completed, expired, cancelled, paid, approved
     const isPaid = statusData.status === 'paid' || statusData.status === 'approved' || statusData.status === 'completed'
 
     return NextResponse.json({
       success: true,
-      transactionId: statusData.reference_id || statusData.identifier,
+      transactionId: statusData.reference_id || statusData.identifier || statusData.id,
       status: statusData.status,
       isPaid: isPaid,
-      paidAt: statusData.transaction_date,
+      paidAt: statusData.paid_at || statusData.transaction_date,
     })
 
   } catch (error) {
