@@ -23,6 +23,38 @@ interface FormData {
 
 const BASE_AMOUNT = 29.90
 const ORDER_BUMP_AMOUNT = 9.90
+const SESSION_KEY = 'lana_pix_transaction'
+
+interface SavedTransaction {
+  step: Step
+  qrCodeText: string
+  transactionId: string
+  finalAmount: number
+  orderBumpSelected: boolean
+  formData: FormData
+  timestamp: number
+}
+
+function saveTransaction(data: SavedTransaction) {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(data)) } catch {}
+}
+
+function loadTransaction(): SavedTransaction | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    if (!raw) return null
+    const data: SavedTransaction = JSON.parse(raw)
+    if (Date.now() - data.timestamp > 30 * 60 * 1000) {
+      sessionStorage.removeItem(SESSION_KEY)
+      return null
+    }
+    return data
+  } catch { return null }
+}
+
+function clearTransaction() {
+  try { sessionStorage.removeItem(SESSION_KEY) } catch {}
+}
 
 export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOUNT }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
@@ -37,19 +69,62 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
   const [checkingPayment, setCheckingPayment] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [finalAmount, setFinalAmount] = useState(amount)
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+  const [restoredFromSession, setRestoredFromSession] = useState(false)
 
   const totalAmount = orderBumpSelected ? amount + ORDER_BUMP_AMOUNT : amount
 
+  // Restaurar transacao salva ao carregar a pagina
+  useEffect(() => {
+    const saved = loadTransaction()
+    if (saved && (saved.step === 'qrcode' || saved.step === 'checking')) {
+      setStep(saved.step)
+      setQrCodeText(saved.qrCodeText)
+      setTransactionId(saved.transactionId)
+      setFinalAmount(saved.finalAmount)
+      setOrderBumpSelected(saved.orderBumpSelected)
+      setFormData(saved.formData)
+      setRestoredFromSession(true)
+    }
+  }, [])
+
   // Trigger entrance animation
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || restoredFromSession) {
       requestAnimationFrame(() => {
         setIsAnimating(true)
       })
     } else {
       setIsAnimating(false)
     }
-  }, [isOpen])
+  }, [isOpen, restoredFromSession])
+
+  // Wake Lock -- manter tela ativa enquanto QR code esta exibido
+  useEffect(() => {
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator && step === 'qrcode') {
+          wakeLockRef.current = await navigator.wakeLock.request('screen')
+        }
+      } catch {}
+    }
+    requestWakeLock()
+    return () => {
+      wakeLockRef.current?.release()
+      wakeLockRef.current = null
+    }
+  }, [step])
+
+  // Aviso ao tentar fechar/recarregar durante pagamento
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (step === 'qrcode' || step === 'checking') {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [step])
 
   // Criar cobranca Pix
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,12 +149,27 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar cobrança')
+        throw new Error(data.error || 'Erro ao criar cobranca')
+      }
+
+      if (!data.qrCodeText || data.qrCodeText.length === 0) {
+        throw new Error('QR Code nao foi gerado. Tente novamente.')
       }
 
       setQrCodeText(data.qrCodeText)
       setTransactionId(data.transactionId)
       setStep('qrcode')
+
+      // Salvar no sessionStorage para sobreviver a recarregamentos
+      saveTransaction({
+        step: 'qrcode',
+        qrCodeText: data.qrCodeText,
+        transactionId: data.transactionId,
+        finalAmount: chargeAmount,
+        orderBumpSelected,
+        formData,
+        timestamp: Date.now(),
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao processar pagamento')
     } finally {
@@ -94,7 +184,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      setError('Erro ao copiar código')
+      setError('Erro ao copiar codigo')
     }
   }
 
@@ -109,6 +199,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       if (data.isPaid) {
         setStep('checking')
         setCheckingPayment(true)
+        clearTransaction()
         setTimeout(() => {
           setStep('success')
           onSuccess()
@@ -118,6 +209,20 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       // Silently fail and retry on next poll
     }
   }, [transactionId, checkingPayment, onSuccess])
+
+  // Re-adquirir Wake Lock e verificar pagamento quando volta ao site
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible' && step === 'qrcode') {
+        navigator.wakeLock?.request('screen').then(lock => {
+          wakeLockRef.current = lock
+        }).catch(() => {})
+        checkPaymentStatus()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [step, checkPaymentStatus])
 
   // Gerar QR Code quando tiver o texto
   useEffect(() => {
@@ -133,7 +238,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
     }
   }, [step, qrCodeText])
 
-  // Polling para verificar pagamento
+  // Polling para verificar pagamento a cada 5s
   useEffect(() => {
     if (step !== 'qrcode' || !transactionId) return
 
@@ -143,20 +248,19 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
 
   // Bloquear scroll quando modal esta aberto
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || restoredFromSession) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
-    
     return () => {
       document.body.style.overflow = ''
     }
-  }, [isOpen])
+  }, [isOpen, restoredFromSession])
 
-  // Reset ao fechar
+  // Reset ao fechar (mas nao se foi restaurado do session)
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen && !restoredFromSession) {
       setStep('form')
       setFormData({ name: '', email: '' })
       setQrCodeText('')
@@ -165,10 +269,11 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       setCheckingPayment(false)
       setOrderBumpSelected(false)
       setFinalAmount(amount)
+      clearTransaction()
     }
-  }, [isOpen, amount])
+  }, [isOpen, amount, restoredFromSession])
 
-  if (!isOpen) return null
+  if (!isOpen && !restoredFromSession) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -177,21 +282,32 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
           isAnimating ? 'opacity-100' : 'opacity-0'
         }`}
-        onClick={onClose}
+        onClick={step === 'qrcode' ? undefined : onClose}
       />
 
-      {/* Modal with scale + fade animation */}
+      {/* Modal */}
       <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out border-0 ${
         isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
       }`}>
-        {/* Header - flush to top, no gap */}
+        {/* Header */}
         <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between -mt-px">
           <div className="flex items-center gap-2 text-white">
             <QrCode className="w-5 h-5" />
             <span className="font-semibold">Assinatura via Pix</span>
           </div>
           <button 
-            onClick={onClose}
+            onClick={() => {
+              if (step === 'qrcode') {
+                // Na tela do QR, nao fechar -- so minimizar? Ou avisar?
+                if (confirm('Tem certeza? Se fechar, o pagamento pode nao ser confirmado.')) {
+                  clearTransaction()
+                  setRestoredFromSession(false)
+                  onClose()
+                }
+              } else {
+                onClose()
+              }
+            }}
             className="text-white/80 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
@@ -209,7 +325,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                   R$ {totalAmount.toFixed(2).replace('.', ',')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {'Conteúdos VIP (Lana Alvarenga)'}
+                  {'Conte\u00fados VIP (Lana Alvarenga)'}
                   {orderBumpSelected && ' + Grupo WhatsApp'}
                 </p>
               </div>
@@ -249,7 +365,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                     ? 'border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-100' 
                     : 'border-amber-400 bg-amber-50/30'
                 }`}>
-                  {/* Order bump header */}
                   <div className="p-4 pb-3">
                     <p className="font-bold text-foreground text-sm mb-3">
                       Grupo Exclusivo de WhatsApp
@@ -266,7 +381,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                         />
                       </div>
                       <p className="text-xs text-zinc-600 leading-relaxed">
-                        {'Exclusividade total que não faz parte do conteúdo padrão. Mais proximidade, sorteios e contato direto comigo! 😌'}
+                        {'Exclusividade total que n\u00e3o faz parte do conte\u00fado padr\u00e3o. Mais proximidade, sorteios e contato direto comigo! \ud83d\ude0c'}
                       </p>
                     </div>
 
@@ -279,7 +394,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                     </div>
                   </div>
 
-                  {/* Checkbox area */}
                   <div className={`border-t border-dashed px-4 py-3 transition-colors duration-300 ${
                     orderBumpSelected ? 'border-emerald-400' : 'border-amber-300/60'
                   }`}>
@@ -317,9 +431,9 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
               <Button 
                 type="submit" 
                 disabled={loading || !formData.name || !formData.email.includes('@')}
-                className={`w-full text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500 delay-[350ms] ${
+                className={`w-full text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500 delay-[350ms] bg-emerald-500 hover:bg-emerald-600 ${
                   isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-                } ${orderBumpSelected ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+                }`}
               >
                 {loading ? (
                   <>
@@ -340,7 +454,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                   <Lock className="w-3 h-3" />
                   Pagamento 100% seguro
                 </span>
-                <span>{'Seus dados estão protegidos.'}</span>
+                <span>{'Seus dados est\u00e3o protegidos.'}</span>
               </div>
             </form>
           )}
@@ -349,11 +463,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
           {step === 'qrcode' && (
             <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">{'Quase lá, amor! 🥰'}</p>
-                <p className="text-sm text-muted-foreground">{'Escaneie ou copie o código abaixo.'}</p>
+                <p className="text-2xl font-bold text-foreground">{'Quase l\u00e1, amor! \ud83e\udd70'}</p>
+                <p className="text-sm text-muted-foreground">{'Escaneie ou copie o c\u00f3digo abaixo.'}</p>
               </div>
 
-              {/* QR Code */}
               <div className="bg-white p-4 rounded-xl border-2 border-zinc-200">
                 <canvas 
                   ref={qrCanvasRef}
@@ -361,7 +474,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 />
               </div>
 
-              {/* Codigo Pix */}
               <div className="w-full">
                 <p className="text-xs text-muted-foreground mb-2 text-center">Pix Copia e Cola:</p>
                 <div className="relative">
@@ -397,7 +509,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 ) : (
                   <>
                     <Copy className="w-4 h-4 mr-2" />
-                    {'Copiar código Pix'}
+                    {'Copiar c\u00f3digo Pix'}
                   </>
                 )}
               </Button>
@@ -408,7 +520,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
               </div>
 
               <p className="text-xs text-center text-muted-foreground -mt-1">
-                {'Após pagar, volte para o site. O seu acesso será liberado automaticamente.'}
+                {'Ap\u00f3s pagar, volte para o site. O seu acesso ser\u00e1 liberado automaticamente.'}
               </p>
             </div>
           )}
@@ -441,7 +553,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                {'Acesse o conteúdo!'}
+                {'Acesse o conte\u00fado!'}
               </Button>
             </div>
           )}

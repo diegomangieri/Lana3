@@ -39,28 +39,39 @@ export async function GET(request: NextRequest) {
       }
     )
 
+    const rawText = await statusResponse.text()
+    console.log('[v0] STATUS - Raw response:', rawText.substring(0, 1000))
+
     if (!statusResponse.ok) {
-      const error = await statusResponse.text()
-      console.error('[v0] Rokify status error:', statusResponse.status, error)
+      console.error('[v0] STATUS - Error:', statusResponse.status)
       return NextResponse.json(
         { error: 'Falha ao consultar status' },
         { status: 500 }
       )
     }
 
-    const responseData = await statusResponse.json()
+    let responseData
+    try {
+      responseData = JSON.parse(rawText)
+    } catch {
+      return NextResponse.json(
+        { error: 'Resposta invalida da Rokify' },
+        { status: 500 }
+      )
+    }
 
     const statusData = responseData.data || responseData
+    console.log('[v0] STATUS - txStatus:', statusData.status, 'paidAt:', statusData.paidAt)
 
-    // Status possiveis: pending, completed, expired, cancelled, paid, approved
+    // Rokify usa "paid" quando o pix foi confirmado, "waiting_payment" quando pendente
     const isPaid = statusData.status === 'paid' || statusData.status === 'approved' || statusData.status === 'completed'
 
     return NextResponse.json({
       success: true,
-      transactionId: statusData.reference_id || statusData.identifier || statusData.id,
+      transactionId: statusData.id || statusData.reference_id || statusData.identifier,
       status: statusData.status,
       isPaid: isPaid,
-      paidAt: statusData.paid_at || statusData.transaction_date,
+      paidAt: statusData.paidAt || statusData.paid_at || statusData.transaction_date,
     })
 
   } catch (error) {

@@ -7,7 +7,7 @@ function getRokifyAuthHeader(): string {
   const companyId = process.env.ROKIFY_COMPANY_ID
 
   if (!secretKey || !companyId) {
-    throw new Error('Credenciais Rokify n\u00e3o configuradas. Configure ROKIFY_SECRET_KEY e ROKIFY_COMPANY_ID.')
+    throw new Error('Credenciais Rokify nao configuradas. Configure ROKIFY_SECRET_KEY e ROKIFY_COMPANY_ID.')
   }
 
   const credentials = Buffer.from(`${secretKey}:${companyId}`).toString('base64')
@@ -21,16 +21,13 @@ export async function POST(request: NextRequest) {
 
     if (!name || !email) {
       return NextResponse.json(
-        { error: 'Nome e email s\u00e3o obrigat\u00f3rios' },
+        { error: 'Nome e email sao obrigatorios' },
         { status: 400 }
       )
     }
 
     const authorization = getRokifyAuthHeader()
-
     const externalId = `vip_${Date.now()}_${Math.random().toString(36).substring(7)}`
-
-    // Rokify espera amount em centavos e paymentMethod explícito
     const amountInCents = Math.round(amount * 100)
 
     const rokifyPayload = {
@@ -43,7 +40,7 @@ export async function POST(request: NextRequest) {
       externalRef: externalId,
     }
 
-    console.log('[v0] Sending to Rokify:', JSON.stringify(rokifyPayload))
+    console.log('[v0] CREATE - Sending payload:', JSON.stringify(rokifyPayload))
 
     const pixResponse = await fetch(`${ROKIFY_BASE_URL}/transactions`, {
       method: 'POST',
@@ -55,41 +52,65 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(rokifyPayload),
     })
 
-    const pixData = await pixResponse.json()
-    console.log('[v0] Rokify status:', pixResponse.status, 'paymentMethod:', pixData.paymentMethod, 'txStatus:', pixData.status)
-    console.log('[v0] Rokify pix field:', JSON.stringify(pixData.pix))
-    console.log('[v0] Rokify full keys:', Object.keys(pixData).join(', '))
+    const rawText = await pixResponse.text()
+    console.log('[v0] CREATE - Raw response (first 2000 chars):', rawText.substring(0, 2000))
 
-    if (!pixResponse.ok || pixData.status === 'refused') {
-      console.error('[v0] Rokify refused reason:', JSON.stringify(pixData.refusedReason))
+    let pixData
+    try {
+      pixData = JSON.parse(rawText)
+    } catch {
+      console.error('[v0] CREATE - Failed to parse JSON')
       return NextResponse.json(
-        { error: `Falha ao criar cobranca Pix: ${pixData.refusedReason?.description || pixResponse.status}` },
+        { error: 'Resposta invalida da Rokify' },
         { status: 500 }
       )
     }
 
-    // Extrair QR code da resposta da Rokify
-    const pixInfo = pixData.pix || {}
-    console.log('[v0] pixInfo keys:', Object.keys(pixInfo).join(', '))
-    console.log('[v0] pixInfo values:', JSON.stringify(pixInfo))
+    console.log('[v0] CREATE - status:', pixResponse.status, 'txStatus:', pixData.status, 'id:', pixData.id)
 
-    const qrCode = pixInfo.qrcode || pixInfo.qr_code || pixInfo.qrCode || pixInfo.qr || pixData.pixCode || pixData.qrCode || pixData.pix_code || ''
-    const qrCodeText = pixInfo.copiaECola || pixInfo.copy_paste || pixInfo.copyPaste || pixInfo.emv || pixInfo.qrcode || pixData.pixCopyPaste || pixData.qrCodeText || qrCode
+    if (!pixResponse.ok || pixData.status === 'refused') {
+      console.error('[v0] CREATE - Refused:', JSON.stringify(pixData.refusedReason))
+      return NextResponse.json(
+        { error: 'Falha ao criar cobranca Pix. Tente novamente.' },
+        { status: 500 }
+      )
+    }
 
-    console.log('[v0] Final QR code found:', !!qrCode, 'length:', qrCode.length)
-    console.log('[v0] Final QR text found:', !!qrCodeText, 'length:', qrCodeText.length)
+    // Log every field inside pix object
+    const pixInfo = pixData.pix
+    if (pixInfo && typeof pixInfo === 'object') {
+      const keys = Object.keys(pixInfo)
+      console.log('[v0] CREATE - pix keys:', keys.join(', '))
+      for (const key of keys) {
+        const val = typeof pixInfo[key] === 'string' ? pixInfo[key].substring(0, 200) : JSON.stringify(pixInfo[key])
+        console.log(`[v0] CREATE - pix.${key}:`, val)
+      }
+    } else {
+      console.log('[v0] CREATE - pix field is:', typeof pixInfo, JSON.stringify(pixInfo))
+    }
+
+    // Try all possible field names for the QR code string
+    const p = pixInfo || {}
+    const qrCodeText =
+      p.qrcode || p.qr_code || p.qrCode ||
+      p.copiaECola || p.copy_paste || p.copyPaste ||
+      p.emv || p.payload || p.brcode || p.code ||
+      p.text || p.pixCode || p.pix_code ||
+      pixData.qrCode || pixData.qrcode || pixData.pixCode || pixData.pix_code || ''
+
+    console.log('[v0] CREATE - Extracted qrCodeText length:', qrCodeText.length, 'starts with:', qrCodeText.substring(0, 40))
 
     return NextResponse.json({
       success: true,
       transactionId: pixData.id || pixData.identifier,
       externalId: externalId,
-      qrCode: qrCode,
+      qrCode: qrCodeText,
       qrCodeText: qrCodeText,
       amount: amount,
     })
 
   } catch (error) {
-    console.error('[v0] Error creating pix charge:', error)
+    console.error('[v0] CREATE - Error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor'
     return NextResponse.json(
       { error: errorMessage },
