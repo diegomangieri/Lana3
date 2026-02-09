@@ -17,7 +17,7 @@ function getRokifyAuthHeader(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, amount = 19.90 } = body
+    const { name, email, amount = 29.90 } = body
 
     if (!name || !email) {
       return NextResponse.json(

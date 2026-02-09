@@ -21,7 +21,7 @@ interface FormData {
   email: string
 }
 
-const BASE_AMOUNT = 19.90
+const BASE_AMOUNT = 29.90
 const ORDER_BUMP_AMOUNT = 9.90
 
 export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOUNT }: PixPaymentModalProps) {

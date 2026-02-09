@@ -87,7 +87,7 @@ export default function VIPSubscriptionPage() {
         isOpen={showPixModal}
         onClose={() => setShowPixModal(false)}
         onSuccess={handlePaymentSuccess}
-        amount={19.90}
+        amount={29.90}
       />
 
       {/* Transition Overlay */}
@@ -265,7 +265,7 @@ export default function VIPSubscriptionPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs text-white/70 line-through">R$ 99,90</p>
-                <p className="text-3xl font-bold">R$ 19,90</p>
+                <p className="text-3xl font-bold">R$ 29,90</p>
               </div>
             </div>
             <Button 
