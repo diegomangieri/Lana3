@@ -17,11 +17,11 @@ function getRokifyAuthHeader(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, cpf, amount = 19.90 } = body
+    const { name, email, amount = 19.90 } = body
 
-    if (!name || !email || !cpf) {
+    if (!name || !email) {
       return NextResponse.json(
-        { error: 'Nome, email e CPF sao obrigatorios' },
+        { error: 'Nome e email sao obrigatorios' },
         { status: 400 }
       )
     }
@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       customer: {
         name: name,
         email: email,
-        document: cpf.replace(/\D/g, ''),
       },
       externalRef: externalId,
     }
@@ -57,7 +56,8 @@ export async function POST(request: NextRequest) {
     })
 
     const pixData = await pixResponse.json()
-    console.log('[v0] Rokify response status:', pixResponse.status, 'body:', JSON.stringify(pixData))
+    console.log('[v0] Rokify full response:', JSON.stringify(pixData, null, 2))
+    console.log('[v0] Rokify pix field:', JSON.stringify(pixData.pix, null, 2))
 
     if (!pixResponse.ok || pixData.status === 'refused') {
       console.error('[v0] Rokify pix error:', pixResponse.status, JSON.stringify(pixData))
@@ -67,9 +67,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Extrair QR code - a Rokify pode retornar em diferentes campos
-    const qrCode = pixData.pix?.qrcode || pixData.pix?.qr_code || pixData.pixCode || pixData.qrCode || pixData.pix_code || ''
-    const qrCodeText = pixData.pix?.copiaECola || pixData.pix?.copy_paste || pixData.pixCopyPaste || pixData.qrCodeText || qrCode
+    // Extrair QR code da resposta da Rokify - verificar todos os campos possiveis
+    const pixInfo = pixData.pix || {}
+    const qrCode = pixInfo.qrcode || pixInfo.qr_code || pixInfo.qrCode || pixData.pixCode || pixData.qrCode || pixData.pix_code || pixData.qr_code || ''
+    const qrCodeText = pixInfo.copiaECola || pixInfo.copy_paste || pixInfo.copyPaste || pixInfo.emv || pixData.pixCopyPaste || pixData.qrCodeText || qrCode
+
+    console.log('[v0] Extracted QR code:', qrCode ? 'found' : 'NOT FOUND')
+    console.log('[v0] Extracted QR text:', qrCodeText ? qrCodeText.substring(0, 50) + '...' : 'NOT FOUND')
 
     return NextResponse.json({
       success: true,

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, Copy, Check, Loader2, QrCode, AlertCircle, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import Image from 'next/image'
 import QRCodeLib from 'qrcode'
 
 interface PixPaymentModalProps {
@@ -18,12 +19,15 @@ type Step = 'form' | 'qrcode' | 'checking' | 'success'
 interface FormData {
   name: string
   email: string
-  cpf: string
 }
 
-export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: PixPaymentModalProps) {
+const BASE_AMOUNT = 19.90
+const ORDER_BUMP_AMOUNT = 9.90
+
+export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOUNT }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
-  const [formData, setFormData] = useState<FormData>({ name: '', email: '', cpf: '' })
+  const [formData, setFormData] = useState<FormData>({ name: '', email: '' })
+  const [orderBumpSelected, setOrderBumpSelected] = useState(false)
   const [qrCodeText, setQrCodeText] = useState<string>('')
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)
   const [transactionId, setTransactionId] = useState<string>('')
@@ -31,12 +35,30 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
   const [checkingPayment, setCheckingPayment] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [finalAmount, setFinalAmount] = useState(amount)
 
-  // Criar cobrança Pix
+  const totalAmount = orderBumpSelected ? amount + ORDER_BUMP_AMOUNT : amount
+
+  // Trigger entrance animation
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        setIsAnimating(true)
+      })
+    } else {
+      setIsAnimating(false)
+    }
+  }, [isOpen])
+
+  // Criar cobranca Pix
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
+
+    const chargeAmount = orderBumpSelected ? amount + ORDER_BUMP_AMOUNT : amount
+    setFinalAmount(chargeAmount)
 
     try {
       const response = await fetch('/api/pix/create', {
@@ -45,15 +67,14 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          cpf: formData.cpf.replace(/\D/g, ''),
-          amount: amount,
+          amount: chargeAmount,
         }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar cobrança')
+        throw new Error(data.error || 'Erro ao criar cobranca')
       }
 
       setQrCodeText(data.qrCodeText)
@@ -66,14 +87,14 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
     }
   }
 
-  // Copiar código Pix
+  // Copiar codigo Pix
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(qrCodeText)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      setError('Erro ao copiar código')
+      setError('Erro ao copiar codigo')
     }
   }
 
@@ -120,7 +141,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
     return () => clearInterval(interval)
   }, [step, transactionId, checkPaymentStatus])
 
-  // Bloquear scroll quando modal está aberto
+  // Bloquear scroll quando modal esta aberto
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -137,26 +158,32 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
   useEffect(() => {
     if (!isOpen) {
       setStep('form')
-      setFormData({ name: '', email: '', cpf: '' })
+      setFormData({ name: '', email: '' })
       setQrCodeText('')
       setTransactionId('')
       setError('')
       setCheckingPayment(false)
+      setOrderBumpSelected(false)
+      setFinalAmount(amount)
     }
-  }, [isOpen])
+  }, [isOpen, amount])
 
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
+      {/* Backdrop with fade */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
+          isAnimating ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <Card className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10">
+      {/* Modal with scale + fade animation */}
+      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out ${
+        isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
+      }`}>
         {/* Header */}
         <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
@@ -172,15 +199,24 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
         </div>
 
         <div className="p-6">
-          {/* Etapa 1: Formulário */}
+          {/* Etapa 1: Formulario */}
           {step === 'form' && (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="text-center mb-2">
-                <p className="text-2xl font-bold text-foreground">R$ {amount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Conteúdos VIP (Lana Alvarenga)</p>
+              <div className={`text-center mb-2 transition-all duration-500 delay-100 ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
+                <p className="text-2xl font-bold text-foreground">
+                  R$ {totalAmount.toFixed(2).replace('.', ',')}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {'Conteudos VIP (Lana Alvarenga)'}
+                  {orderBumpSelected && ' + Grupo WhatsApp'}
+                </p>
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className={`flex flex-col gap-1 transition-all duration-500 delay-150 ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
                 <label className="text-sm font-medium text-foreground">Nome completo</label>
                 <input
                   type="text"
@@ -192,7 +228,9 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className={`flex flex-col gap-1 transition-all duration-500 delay-200 ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
                 <label className="text-sm font-medium text-foreground">E-mail</label>
                 <input
                   type="email"
@@ -204,38 +242,84 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-foreground">CPF</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.cpf}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, '')
-                    const formatted = value
-                      .replace(/(\d{3})(\d)/, '$1.$2')
-                      .replace(/(\d{3})(\d)/, '$1.$2')
-                      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-                      .replace(/(-\d{2})\d+?$/, '$1')
-                    setFormData({ ...formData, cpf: formatted })
-                  }}
-                  maxLength={14}
-                  className="w-full px-4 py-3 rounded-lg border border-zinc-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  placeholder="000.000.000-00"
-                />
+              {/* Order Bump */}
+              <div className={`transition-all duration-500 delay-300 ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
+                <div className={`border-2 border-dashed rounded-xl overflow-hidden transition-all duration-300 ${
+                  orderBumpSelected 
+                    ? 'border-emerald-400 bg-emerald-50/50 shadow-md shadow-emerald-100' 
+                    : 'border-amber-400 bg-amber-50/30'
+                }`}>
+                  {/* Order bump header */}
+                  <div className="p-4 pb-3">
+                    <p className="font-bold text-emerald-700 text-sm mb-3">
+                      Grupo Exclusivo de WhatsApp
+                    </p>
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                        <Image
+                          src="/images/whatsapp-logo.jpg"
+                          alt="WhatsApp"
+                          width={40}
+                          height={40}
+                          className="w-full h-full object-cover"
+                          priority
+                        />
+                      </div>
+                      <p className="text-xs text-zinc-600 leading-relaxed">
+                        {'Exclusividade total que nao faz parte do conteudo padrao. Mais proximidade, sorteios e contato direto comigo! \ud83d\ude0c'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="text-base font-bold text-zinc-900">R$ 9,90</span>
+                      <span className="text-xs text-zinc-400 line-through">R$ 49,90</span>
+                      <span className="text-[10px] font-bold text-white bg-emerald-500 px-2 py-0.5 rounded-full ml-auto">
+                        80%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Checkbox area */}
+                  <div className="border-t border-dashed border-amber-300/60 px-4 py-3">
+                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={orderBumpSelected}
+                          onChange={(e) => setOrderBumpSelected(e.target.checked)}
+                          className="sr-only"
+                        />
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                          orderBumpSelected 
+                            ? 'bg-emerald-500 border-emerald-500' 
+                            : 'border-zinc-300 bg-white'
+                        }`}>
+                          {orderBumpSelected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                      </div>
+                      <span className="text-sm font-medium text-zinc-700">
+                        Quero comprar junto!
+                      </span>
+                    </label>
+                  </div>
+                </div>
               </div>
 
               {error && (
                 <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {error}
                 </div>
               )}
 
               <Button 
                 type="submit" 
-                disabled={loading || !formData.name || !formData.email.includes('@') || formData.cpf.length < 14}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !formData.name || !formData.email.includes('@')}
+                className={`w-full text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500 delay-[350ms] ${
+                  isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+                } ${orderBumpSelected ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
               >
                 {loading ? (
                   <>
@@ -243,11 +327,15 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                     Gerando Pix...
                   </>
                 ) : (
-                  'Gerar QR Code Pix'
+                  <>
+                    Pagar R$ {totalAmount.toFixed(2).replace('.', ',')} via Pix
+                  </>
                 )}
               </Button>
 
-              <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+              <p className={`text-xs text-center text-muted-foreground flex items-center justify-center gap-1 transition-all duration-500 delay-[400ms] ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
                 <Lock className="w-3 h-3" />
                 Pagamento 100% seguro
               </p>
@@ -256,10 +344,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
           {/* Etapa 2: QR Code */}
           {step === 'qrcode' && (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">R$ {amount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o código</p>
+                <p className="text-2xl font-bold text-foreground">R$ {finalAmount.toFixed(2).replace('.', ',')}</p>
+                <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o codigo</p>
               </div>
 
               {/* QR Code */}
@@ -270,7 +358,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 />
               </div>
 
-              {/* Código Pix */}
+              {/* Codigo Pix */}
               <div className="w-full">
                 <p className="text-xs text-muted-foreground mb-2 text-center">Pix Copia e Cola:</p>
                 <div className="relative">
@@ -301,12 +389,12 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 {copied ? (
                   <>
                     <Check className="w-4 h-4 mr-2 text-emerald-500" />
-                    Copiado!
+                    {'Copiado!'}
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4 mr-2" />
-                    Copiar código Pix
+                    {'Copiar codigo Pix'}
                   </>
                 )}
               </Button>
@@ -324,7 +412,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
           {/* Etapa 3: Verificando */}
           {step === 'checking' && (
-            <div className="flex flex-col items-center gap-4 py-8">
+            <div className="flex flex-col items-center gap-4 py-8 animate-in fade-in duration-300">
               <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
                 <Check className="w-8 h-8 text-emerald-500" />
               </div>
@@ -338,7 +426,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
 
           {/* Etapa 4: Sucesso */}
           {step === 'success' && (
-            <div className="flex flex-col items-center gap-6 py-8">
+            <div className="flex flex-col items-center gap-6 py-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
                 <Check className="w-10 h-10 text-emerald-500" />
               </div>
@@ -350,7 +438,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = 19.90 }: 
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                Acesse o conteúdo!
+                {'Acesse o conteudo!'}
               </Button>
             </div>
           )}

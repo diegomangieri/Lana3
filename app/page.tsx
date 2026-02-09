@@ -79,6 +79,9 @@ export default function VIPSubscriptionPage() {
 
   return (
     <>
+      {/* Preload WhatsApp logo for order bump */}
+      <link rel="preload" href="/images/whatsapp-logo.jpg" as="image" />
+
       {/* Pix Payment Modal */}
       <PixPaymentModal
         isOpen={showPixModal}
