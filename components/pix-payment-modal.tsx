@@ -351,8 +351,8 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
           {step === 'qrcode' && (
             <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">R$ {finalAmount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o código</p>
+                <p className="text-2xl font-bold text-foreground">{'Quase lá, amor! 🥰'}</p>
+                <p className="text-sm text-muted-foreground">{'Escaneie ou copie o código abaixo.'}</p>
               </div>
 
               {/* QR Code */}
@@ -410,7 +410,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
               </div>
 
               <p className="text-xs text-center text-muted-foreground">
-                O QR Code expira em 10 minutos!
+                {'Após pagar, volte para o site. O acesso será liberado automaticamente.'}
               </p>
             </div>
           )}
