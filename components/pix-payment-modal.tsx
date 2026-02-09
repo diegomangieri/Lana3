@@ -307,7 +307,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       />
 
       {/* Modal */}
-      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out !border-0 ${
+      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out border-0 ${
         isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
       }`}>
         {/* Header */}
@@ -574,7 +574,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                {'Acessar conte\u00FAdo!'}
+                {'Acesse o conte\u00fado!'}
               </Button>
             </div>
           )}
