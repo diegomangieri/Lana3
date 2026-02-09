@@ -116,7 +116,8 @@ export default function VIPSubscriptionPage() {
 
       {/* Landing Page - Always rendered, hidden when VIP is shown */}
       <div 
-        className={`min-h-screen bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center p-4 transition-opacity duration-700 ease-out ${pageReady && !showVIP ? 'opacity-100' : 'opacity-0'} ${showVIP ? 'hidden' : ''}`}
+        className={`min-h-svh bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center p-4 transition-opacity duration-700 ease-out ${pageReady && !showVIP ? 'opacity-100' : 'opacity-0'} ${showVIP ? 'hidden' : ''}`}
+        style={{ minHeight: '100dvh' }}
       >
         <div className="w-full max-w-md">
           {/* Profile Section */}
