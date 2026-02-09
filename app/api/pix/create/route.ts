@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     const rokifyPayload = {
       amount: amountInCents,
-      paymentMethod: 'pix',
+      paymentMethod: 'PIX',
       customer: {
         name: name,
         email: email,
@@ -56,24 +56,28 @@ export async function POST(request: NextRequest) {
     })
 
     const pixData = await pixResponse.json()
-    console.log('[v0] Rokify full response:', JSON.stringify(pixData, null, 2))
-    console.log('[v0] Rokify pix field:', JSON.stringify(pixData.pix, null, 2))
+    console.log('[v0] Rokify status:', pixResponse.status, 'paymentMethod:', pixData.paymentMethod, 'txStatus:', pixData.status)
+    console.log('[v0] Rokify pix field:', JSON.stringify(pixData.pix))
+    console.log('[v0] Rokify full keys:', Object.keys(pixData).join(', '))
 
     if (!pixResponse.ok || pixData.status === 'refused') {
-      console.error('[v0] Rokify pix error:', pixResponse.status, JSON.stringify(pixData))
+      console.error('[v0] Rokify refused reason:', JSON.stringify(pixData.refusedReason))
       return NextResponse.json(
-        { error: `Falha ao criar cobran\u00e7a Pix: ${pixResponse.status}` },
+        { error: `Falha ao criar cobranca Pix: ${pixData.refusedReason?.description || pixResponse.status}` },
         { status: 500 }
       )
     }
 
-    // Extrair QR code da resposta da Rokify - verificar todos os campos possiveis
+    // Extrair QR code da resposta da Rokify
     const pixInfo = pixData.pix || {}
-    const qrCode = pixInfo.qrcode || pixInfo.qr_code || pixInfo.qrCode || pixData.pixCode || pixData.qrCode || pixData.pix_code || pixData.qr_code || ''
-    const qrCodeText = pixInfo.copiaECola || pixInfo.copy_paste || pixInfo.copyPaste || pixInfo.emv || pixData.pixCopyPaste || pixData.qrCodeText || qrCode
+    console.log('[v0] pixInfo keys:', Object.keys(pixInfo).join(', '))
+    console.log('[v0] pixInfo values:', JSON.stringify(pixInfo))
 
-    console.log('[v0] Extracted QR code:', qrCode ? 'found' : 'NOT FOUND')
-    console.log('[v0] Extracted QR text:', qrCodeText ? qrCodeText.substring(0, 50) + '...' : 'NOT FOUND')
+    const qrCode = pixInfo.qrcode || pixInfo.qr_code || pixInfo.qrCode || pixInfo.qr || pixData.pixCode || pixData.qrCode || pixData.pix_code || ''
+    const qrCodeText = pixInfo.copiaECola || pixInfo.copy_paste || pixInfo.copyPaste || pixInfo.emv || pixInfo.qrcode || pixData.pixCopyPaste || pixData.qrCodeText || qrCode
+
+    console.log('[v0] Final QR code found:', !!qrCode, 'length:', qrCode.length)
+    console.log('[v0] Final QR text found:', !!qrCodeText, 'length:', qrCodeText.length)
 
     return NextResponse.json({
       success: true,
