@@ -410,7 +410,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
               </div>
 
               <p className="text-xs text-center text-muted-foreground">
-                {'Após pagar, volte para o site. O acesso será liberado automaticamente.'}
+                {'Após pagar, volte para o site. O seu acesso será liberado automaticamente.'}
               </p>
             </div>
           )}
