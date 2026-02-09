@@ -206,6 +206,21 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
         setStep('checking')
         setCheckingPayment(true)
         clearTransaction()
+
+        // Salvar assinante no banco de dados
+        try {
+          await fetch('/api/subscriber', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: formData.email,
+              name: formData.name,
+              transactionId,
+              amount: finalAmount,
+            }),
+          })
+        } catch {}
+
         setTimeout(() => {
           setStep('success')
           onSuccess()

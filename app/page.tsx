@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PixPaymentModal } from "@/components/pix-payment-modal"
+import { SubscriberLoginModal } from "@/components/subscriber-login-modal"
 
 
 export default function VIPSubscriptionPage() {
@@ -18,6 +19,7 @@ export default function VIPSubscriptionPage() {
   const [pageReady, setPageReady] = useState(false)
   const [vipContentVisible, setVipContentVisible] = useState(false)
   const [showPixModal, setShowPixModal] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   // Fade in everything on mount
   useEffect(() => {
@@ -61,6 +63,11 @@ export default function VIPSubscriptionPage() {
     router.push('/sucesso')
   }
 
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false)
+    router.push('/sucesso')
+  }
+
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const promoDate = tomorrow.toLocaleDateString('pt-BR', { 
@@ -81,6 +88,13 @@ export default function VIPSubscriptionPage() {
     <>
       {/* Preload WhatsApp logo for order bump */}
       <link rel="preload" href="/images/whatsapp-logo.jpg" as="image" />
+
+      {/* Login Modal */}
+      <SubscriberLoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
+      />
 
       {/* Pix Payment Modal */}
       <PixPaymentModal
@@ -149,13 +163,19 @@ export default function VIPSubscriptionPage() {
         </div>
 
         {/* Logo Section */}
-        <div className="bg-background py-2 px-4 flex justify-center border-b">
+        <div className="bg-background py-2 px-4 flex items-center justify-between border-b">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
               C
             </div>
-            <h1 className="text-xl font-bold text-foreground">Conteúdos VIP</h1>
+            <h1 className="text-xl font-bold text-foreground">{'Conte\u00fados VIP'}</h1>
           </div>
+          <button
+            onClick={() => setShowLoginModal(true)}
+            className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors whitespace-nowrap"
+          >
+            {'J\u00e1 sou assinante'}
+          </button>
         </div>
 
         {/* Profile Header Section */}
