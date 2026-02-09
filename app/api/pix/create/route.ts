@@ -30,6 +30,22 @@ export async function POST(request: NextRequest) {
 
     const externalId = `vip_${Date.now()}_${Math.random().toString(36).substring(7)}`
 
+    // Rokify espera amount em centavos e paymentMethod explícito
+    const amountInCents = Math.round(amount * 100)
+
+    const rokifyPayload = {
+      amount: amountInCents,
+      paymentMethod: 'pix',
+      customer: {
+        name: name,
+        email: email,
+        document: cpf.replace(/\D/g, ''),
+      },
+      externalRef: externalId,
+    }
+
+    console.log('[v0] Sending to Rokify:', JSON.stringify(rokifyPayload))
+
     const pixResponse = await fetch(`${ROKIFY_BASE_URL}/transactions`, {
       method: 'POST',
       headers: {
@@ -37,34 +53,30 @@ export async function POST(request: NextRequest) {
         'Accept': 'application/json',
         'Authorization': authorization,
       },
-      body: JSON.stringify({
-        amount: amount,
-        description: 'Assinatura VIP - Lana Alvarenga',
-        client: {
-          name: name,
-          cpf: cpf,
-          email: email,
-        },
-      }),
+      body: JSON.stringify(rokifyPayload),
     })
 
-    if (!pixResponse.ok) {
-      const error = await pixResponse.text()
-      console.error('[v0] Rokify pix error:', pixResponse.status, error)
+    const pixData = await pixResponse.json()
+    console.log('[v0] Rokify response status:', pixResponse.status, 'body:', JSON.stringify(pixData))
+
+    if (!pixResponse.ok || pixData.status === 'refused') {
+      console.error('[v0] Rokify pix error:', pixResponse.status, JSON.stringify(pixData))
       return NextResponse.json(
         { error: `Falha ao criar cobranca Pix: ${pixResponse.status}` },
         { status: 500 }
       )
     }
 
-    const pixData = await pixResponse.json()
+    // Extrair QR code - a Rokify pode retornar em diferentes campos
+    const qrCode = pixData.pix?.qrcode || pixData.pix?.qr_code || pixData.pixCode || pixData.qrCode || pixData.pix_code || ''
+    const qrCodeText = pixData.pix?.copiaECola || pixData.pix?.copy_paste || pixData.pixCopyPaste || pixData.qrCodeText || qrCode
 
     return NextResponse.json({
       success: true,
-      transactionId: pixData.identifier || pixData.id,
+      transactionId: pixData.id || pixData.identifier,
       externalId: externalId,
-      qrCode: pixData.pix_code || pixData.qr_code,
-      qrCodeText: pixData.pix_code || pixData.qr_code,
+      qrCode: qrCode,
+      qrCodeText: qrCodeText,
       amount: amount,
     })
 
