@@ -11,6 +11,13 @@ interface SubscriberLoginModalProps {
   onSuccess: () => void
 }
 
+const TITLE_TEXT = 'Acesse o conte\u00FAdo!'
+const DESC_TEXT = 'Digite o E-mail que voc\u00EA utilizou na hora da compra para acessar.'
+const BTN_TEXT = 'Acessar conte\u00FAdo!'
+const ERROR_TEXT = 'E-mail n\u00E3o encontrado. Verifique se digitou o E-mail correto usado na compra.'
+const VERIFIED_TITLE = 'Assinatura verificada!'
+const VERIFIED_DESC = 'Redirecionando para o conte\u00FAdo...'
+
 export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberLoginModalProps) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -59,7 +66,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
           onSuccess()
         }, 1500)
       } else {
-        setError('E-mail n\u00e3o encontrado. Verifique se digitou o E-mail correto usado na compra.')
+        setError(ERROR_TEXT)
       }
     } catch {
       setError('Erro ao verificar. Tente novamente.')
@@ -82,11 +89,10 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
       <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 transition-all duration-300 ease-out !border-0 ${
         isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
       }`}>
-        {/* Header */}
         <div className="bg-gradient-to-r from-primary to-orange-500 p-4 flex items-center justify-between -mt-px">
           <div className="flex items-center gap-2 text-white">
             <Mail className="w-5 h-5" />
-            <span className="font-semibold">{'J\u00e1 sou assinante'}</span>
+            <span className="font-semibold">{'J\u00E1 sou assinante'}</span>
           </div>
           <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
             <X className="w-5 h-5" />
@@ -99,10 +105,8 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
               <div className={`text-center transition-all duration-500 delay-100 ${
                 isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}>
-                <p className="text-lg font-bold text-foreground">{'Acesse o conte\u00fado!'}</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {'Digite o E-mail que voc\u00ea utilizou na hora da compra para acessar.'}
-                </p>
+                <p className="text-lg font-bold text-foreground">{TITLE_TEXT}</p>
+                <p className="text-sm text-muted-foreground mt-1">{DESC_TEXT}</p>
               </div>
 
               <div className={`transition-all duration-500 delay-200 ${
@@ -138,9 +142,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Verificando...
                     </>
-                  ) : (
-                    'Acessar conte\u00FAdo!'
-                  )}
+                  ) : BTN_TEXT}
                 </Button>
               </div>
             </form>
@@ -150,8 +152,8 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
                 <Check className="w-8 h-8 text-emerald-500" />
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-foreground">Assinatura verificada!</p>
-                <p className="text-sm text-muted-foreground mt-1">Redirecionando para o conte&#250;do...</p>
+                <p className="text-xl font-bold text-foreground">{VERIFIED_TITLE}</p>
+                <p className="text-sm text-muted-foreground mt-1">{VERIFIED_DESC}</p>
               </div>
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>

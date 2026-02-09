@@ -574,7 +574,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                Acessar conte&#250;do!
+                {'Acessar conte\u00FAdo!'}
               </Button>
             </div>
           )}
