@@ -79,7 +79,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
         onClick={onClose}
       />
 
-      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 transition-all duration-300 ease-out border-0 ${
+      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 transition-all duration-300 ease-out !border-0 ${
         isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
       }`}>
         {/* Header */}
@@ -151,7 +151,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
               </div>
               <div className="text-center">
                 <p className="text-xl font-bold text-foreground">Assinatura verificada!</p>
-                <p className="text-sm text-muted-foreground mt-1">Redirecionando para seu conte{'u\u0301'}do...</p>
+                <p className="text-sm text-muted-foreground mt-1">{'Redirecionando para o conte\u00fado...'}</p>
               </div>
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
