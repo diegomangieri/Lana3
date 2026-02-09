@@ -538,7 +538,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 <Check className="w-8 h-8 text-emerald-500" />
               </div>
               <div className="text-center">
-                <p className="text-xl font-bold text-foreground">Pagamento confirmado!</p>
+                <p className="text-xl font-bold text-foreground">Pagamento Confirmado!</p>
                 <p className="text-sm text-muted-foreground">Processando...</p>
               </div>
               <Loader2 className="w-6 h-6 animate-spin text-primary" />
@@ -552,8 +552,8 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 <Check className="w-10 h-10 text-emerald-500" />
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-foreground">Pagamento confirmado!</p>
-                <p className="text-sm text-muted-foreground mt-2">Sua assinatura foi ativada com sucesso.</p>
+                <p className="text-2xl font-bold text-foreground">Pagamento Confirmado!</p>
+                <p className="text-sm text-muted-foreground mt-2">Sua assinatura VIP foi ativada.</p>
               </div>
               <Button 
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
