@@ -24,40 +24,6 @@ interface FormData {
 const BASE_AMOUNT = 29.90
 const ORDER_BUMP_AMOUNT = 9.90
 
-const SESSION_KEY = 'lana_pix_transaction'
-
-interface SavedTransaction {
-  step: Step
-  qrCodeText: string
-  transactionId: string
-  finalAmount: number
-  orderBumpSelected: boolean
-  formData: FormData
-  timestamp: number
-}
-
-function saveTransaction(data: SavedTransaction) {
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(data)) } catch {}
-}
-
-function loadTransaction(): SavedTransaction | null {
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return null
-    const data: SavedTransaction = JSON.parse(raw)
-    // Expira em 30 minutos
-    if (Date.now() - data.timestamp > 30 * 60 * 1000) {
-      sessionStorage.removeItem(SESSION_KEY)
-      return null
-    }
-    return data
-  } catch { return null }
-}
-
-function clearTransaction() {
-  try { sessionStorage.removeItem(SESSION_KEY) } catch {}
-}
-
 export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOUNT }: PixPaymentModalProps) {
   const [step, setStep] = useState<Step>('form')
   const [formData, setFormData] = useState<FormData>({ name: '', email: '' })
@@ -71,62 +37,19 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
   const [checkingPayment, setCheckingPayment] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [finalAmount, setFinalAmount] = useState(amount)
-  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
-  const [restoredFromSession, setRestoredFromSession] = useState(false)
 
   const totalAmount = orderBumpSelected ? amount + ORDER_BUMP_AMOUNT : amount
 
-  // Restaurar transacao salva ao carregar a pagina
-  useEffect(() => {
-    const saved = loadTransaction()
-    if (saved && (saved.step === 'qrcode' || saved.step === 'checking')) {
-      setStep(saved.step)
-      setQrCodeText(saved.qrCodeText)
-      setTransactionId(saved.transactionId)
-      setFinalAmount(saved.finalAmount)
-      setOrderBumpSelected(saved.orderBumpSelected)
-      setFormData(saved.formData)
-      setRestoredFromSession(true)
-    }
-  }, [])
-
   // Trigger entrance animation
   useEffect(() => {
-    if (isOpen || restoredFromSession) {
+    if (isOpen) {
       requestAnimationFrame(() => {
         setIsAnimating(true)
       })
     } else {
       setIsAnimating(false)
     }
-  }, [isOpen, restoredFromSession])
-
-  // Wake Lock -- manter tela ativa enquanto QR code esta exibido
-  useEffect(() => {
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator && step === 'qrcode') {
-          wakeLockRef.current = await navigator.wakeLock.request('screen')
-        }
-      } catch {}
-    }
-    requestWakeLock()
-    return () => {
-      wakeLockRef.current?.release()
-      wakeLockRef.current = null
-    }
-  }, [step])
-
-  // Aviso ao tentar fechar/recarregar durante pagamento
-  useEffect(() => {
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
-      if (step === 'qrcode' || step === 'checking') {
-        e.preventDefault()
-      }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [step])
+  }, [isOpen])
 
   // Criar cobranca Pix
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,17 +80,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       setQrCodeText(data.qrCodeText)
       setTransactionId(data.transactionId)
       setStep('qrcode')
-
-      // Salvar no sessionStorage para sobreviver a recarregamentos
-      saveTransaction({
-        step: 'qrcode',
-        qrCodeText: data.qrCodeText,
-        transactionId: data.transactionId,
-        finalAmount: chargeAmount,
-        orderBumpSelected,
-        formData,
-        timestamp: Date.now(),
-      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao processar pagamento')
     } finally {
@@ -197,7 +109,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       if (data.isPaid) {
         setStep('checking')
         setCheckingPayment(true)
-        clearTransaction()
         setTimeout(() => {
           setStep('success')
           onSuccess()
@@ -207,20 +118,6 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       // Silently fail and retry on next poll
     }
   }, [transactionId, checkingPayment, onSuccess])
-
-  // Re-adquirir Wake Lock e verificar pagamento quando o usuario volta ao site
-  useEffect(() => {
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible' && step === 'qrcode') {
-        navigator.wakeLock?.request('screen').then(lock => {
-          wakeLockRef.current = lock
-        }).catch(() => {})
-        checkPaymentStatus()
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [step, checkPaymentStatus])
 
   // Gerar QR Code quando tiver o texto
   useEffect(() => {
@@ -257,9 +154,9 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
     }
   }, [isOpen])
 
-  // Reset ao fechar (mas nao se foi restaurado do session)
+  // Reset ao fechar
   useEffect(() => {
-    if (!isOpen && !restoredFromSession) {
+    if (!isOpen) {
       setStep('form')
       setFormData({ name: '', email: '' })
       setQrCodeText('')
@@ -268,11 +165,10 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       setCheckingPayment(false)
       setOrderBumpSelected(false)
       setFinalAmount(amount)
-      clearTransaction()
     }
-  }, [isOpen, amount, restoredFromSession])
+  }, [isOpen, amount])
 
-  if (!isOpen && !restoredFromSession) return null
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
