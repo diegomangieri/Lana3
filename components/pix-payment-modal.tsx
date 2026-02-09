@@ -74,7 +74,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar cobran\u00e7a')
+        throw new Error(data.error || 'Erro ao criar cobrança')
       }
 
       setQrCodeText(data.qrCodeText)
@@ -94,7 +94,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      setError('Erro ao copiar c\u00f3digo')
+      setError('Erro ao copiar código')
     }
   }
 
@@ -209,7 +209,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                   R$ {totalAmount.toFixed(2).replace('.', ',')}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {'Conte\u00fados VIP (Lana Alvarenga)'}
+                  {'Conteúdos VIP (Lana Alvarenga)'}
                   {orderBumpSelected && ' + Grupo WhatsApp'}
                 </p>
               </div>
@@ -268,7 +268,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                         />
                       </div>
                       <p className="text-xs text-zinc-600 leading-relaxed">
-                        {'Exclusividade total que n\u00e3o faz parte do conte\u00fado padr\u00e3o. Mais proximidade, sorteios e contato direto comigo! \ud83d\ude0c'}
+                        {'Exclusividade total que não faz parte do conteúdo padrão. Mais proximidade, sorteios e contato direto comigo! 😌'}
                       </p>
                     </div>
 
@@ -342,7 +342,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                   <Lock className="w-3 h-3" />
                   Pagamento 100% seguro
                 </span>
-                <span>Seus dados est\u00e3o protegidos.</span>
+                <span>{'Seus dados estão protegidos.'}</span>
               </div>
             </form>
           )}
@@ -352,7 +352,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
             <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="text-center">
                 <p className="text-2xl font-bold text-foreground">R$ {finalAmount.toFixed(2).replace('.', ',')}</p>
-                <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o c\u00f3digo</p>
+                <p className="text-sm text-muted-foreground">Escaneie o QR Code ou copie o código</p>
               </div>
 
               {/* QR Code */}
@@ -399,7 +399,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 ) : (
                   <>
                     <Copy className="w-4 h-4 mr-2" />
-                    {'Copiar c\u00f3digo Pix'}
+                    {'Copiar código Pix'}
                   </>
                 )}
               </Button>
@@ -443,7 +443,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                 onClick={() => window.open('https://chat.whatsapp.com/Ia25ACVCPkq4cMbeWCxwYx?mode=gi_t', '_blank')}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg"
               >
-                {'Acesse o conte\u00fado!'}
+                {'Acesse o conteúdo!'}
               </Button>
             </div>
           )}
