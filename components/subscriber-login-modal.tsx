@@ -59,7 +59,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
           onSuccess()
         }, 1500)
       } else {
-        setError('E-mail n\u00e3o encontrado. Verifique se digitou o mesmo e-mail usado na compra.')
+        setError('E-mail n\u00e3o encontrado. Verifique se digitou o E-mail correto usado na compra.')
       }
     } catch {
       setError('Erro ao verificar. Tente novamente.')
@@ -97,9 +97,9 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
           {!verified ? (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="text-center">
-                <p className="text-lg font-bold text-foreground">Acesse seu conte{'u\u0301'}do</p>
+                <p className="text-lg font-bold text-foreground">{'Acesse o conte\u00fado!'}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Digite o e-mail que voc{'e\u0302'} usou na compra para acessar.
+                  {'Digite o E-mail que voc\u00ea utilizou na hora da compra para acessar.'}
                 </p>
               </div>
 
@@ -130,7 +130,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
                     Verificando...
                   </>
                 ) : (
-                  'Acessar conte\u00fado'
+                  'Acessar conte\u00fado!'
                 )}
               </Button>
             </form>
