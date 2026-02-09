@@ -95,44 +95,54 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
 
         <div className="px-6 pt-4 pb-5">
           {!verified ? (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="text-center">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <div className={`text-center transition-all duration-500 delay-100 ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
                 <p className="text-lg font-bold text-foreground">{'Acesse o conte\u00fado!'}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {'Digite o E-mail que voc\u00ea utilizou na hora da compra para acessar.'}
                 </p>
               </div>
 
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setError('') }}
-                className="w-full px-4 py-3 rounded-lg border border-zinc-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                placeholder="seu@email.com"
-              />
+              <div className={`transition-all duration-500 delay-200 ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError('') }}
+                  className="w-full px-4 py-3 rounded-lg border border-zinc-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  placeholder="seu@email.com"
+                />
+              </div>
 
               {error && (
-                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg animate-in fade-in slide-in-from-top-1 duration-200">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {error}
                 </div>
               )}
 
-              <Button
-                type="submit"
-                disabled={loading || !email.includes('@')}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Verificando...
-                  </>
-                ) : (
-                  'Acessar conte\u00fado!'
-                )}
-              </Button>
+              <div className={`transition-all duration-500 delay-300 ${
+                isAnimating ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+              }`}>
+                <Button
+                  type="submit"
+                  disabled={loading || !email.includes('@')}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Verificando...
+                    </>
+                  ) : (
+                    'Acessar conte\u00fado!'
+                  )}
+                </Button>
+              </div>
             </form>
           ) : (
             <div className="flex flex-col items-center gap-4 py-6 animate-in fade-in duration-300">
