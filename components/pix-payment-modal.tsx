@@ -282,7 +282,9 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
                   </div>
 
                   {/* Checkbox area */}
-                  <div className="border-t border-dashed border-amber-300/60 px-4 py-3">
+                  <div className={`border-t border-dashed px-4 py-3 transition-colors duration-300 ${
+                    orderBumpSelected ? 'border-emerald-400' : 'border-amber-300/60'
+                  }`}>
                     <label className="flex items-center gap-3 cursor-pointer select-none">
                       <div className="relative">
                         <input
