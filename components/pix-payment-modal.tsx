@@ -181,7 +181,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
       />
 
       {/* Modal with scale + fade animation */}
-      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out ${
+      <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] overflow-y-auto transition-all duration-300 ease-out border-2 border-orange-400 ${
         isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
       }`}>
         {/* Header */}
