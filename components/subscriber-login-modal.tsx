@@ -83,7 +83,7 @@ export function SubscriberLoginModal({ isOpen, onClose, onSuccess }: SubscriberL
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
           isAnimating ? 'opacity-100' : 'opacity-0'
         }`}
-        onClick={onClose}
+
       />
 
       <Card className={`relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden z-10 transition-all duration-300 ease-out !border-0 ${

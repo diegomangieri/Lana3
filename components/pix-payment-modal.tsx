@@ -303,7 +303,7 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
         className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
           isAnimating ? 'opacity-100' : 'opacity-0'
         }`}
-        onClick={step === 'qrcode' ? undefined : onClose}
+
       />
 
       {/* Modal */}
