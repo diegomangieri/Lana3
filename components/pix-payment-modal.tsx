@@ -316,23 +316,14 @@ export function PixPaymentModal({ isOpen, onClose, onSuccess, amount = BASE_AMOU
             <QrCode className="w-5 h-5" />
             <span className="font-semibold">Assinatura via Pix</span>
           </div>
-          <button 
-            onClick={() => {
-              if (step === 'qrcode') {
-                // Na tela do QR, nao fechar -- so minimizar? Ou avisar?
-                if (confirm('Tem certeza? Se fechar, o pagamento pode nao ser confirmado.')) {
-                  clearTransaction()
-                  setRestoredFromSession(false)
-                  onClose()
-                }
-              } else {
-                onClose()
-              }
-            }}
-            className="text-white/80 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {step === 'form' && (
+            <button 
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <div className="px-6 pt-4 pb-5">
